@@ -17,5 +17,7 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck --workspaces --if-present
+      - name: Install Cloud Functions deps (not an npm workspace)
+        run: npm ci --prefix backend/functions
       - name: Build Cloud Functions
         run: npm --prefix backend/functions run build
