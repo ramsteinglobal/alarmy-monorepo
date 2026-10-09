@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS, SPACING } from '../../theme';
+import {COLORS} from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
 
 type Props = RootScreenProps<'Login'>;
