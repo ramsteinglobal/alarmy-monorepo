@@ -11,15 +11,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useFocusEffect } from '@react-navigation/native';
 
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { COLORS } from '../../theme';
-import type { MainTabParamList } from '../../types/navigation';
 import {
   AlarmHistoryItem,
   getAlarmHistory,
 } from '../../storage/alarmHistory';
-
-type Props = BottomTabScreenProps<MainTabParamList, 'Report'>;
 
 type WeekData = {
   day: string;
@@ -27,7 +23,7 @@ type WeekData = {
   height: number;
 };
 
-const ReportDashboardScreen = ({ _navigation }: Props) => {
+const ReportDashboardScreen = () => {
   const [history, setHistory] = useState<AlarmHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -434,7 +430,7 @@ const ReportDashboardScreen = ({ _navigation }: Props) => {
           {/* Wake-up Consistency */}
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
+            <Text style={styles.sectionHeaderTitle}>
               Wake-Up Consistency
             </Text>
 
@@ -496,7 +492,7 @@ const ReportDashboardScreen = ({ _navigation }: Props) => {
           {/* Sleep Overview */}
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
+            <Text style={styles.sectionHeaderTitle}>
               Sleep Overview
             </Text>
 
@@ -984,6 +980,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 23,
     marginBottom: 10,
+  },
+
+  sectionHeaderTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.text,
   },
 
   sectionAction: {
