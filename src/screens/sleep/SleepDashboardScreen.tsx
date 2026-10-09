@@ -14,7 +14,7 @@ import type { MainTabParamList } from '../../types/navigation';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Sleep'>;
 
-const SleepDashboardScreen = ({ navigation }: Props) => {
+const SleepDashboardScreen = () => {
   const sleepData = useMemo(
     () => ({
       bedtime: '11:15 PM',
