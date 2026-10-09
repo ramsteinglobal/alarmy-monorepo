@@ -48,8 +48,12 @@ export type RootScreenProps<T extends keyof RootStackParamList> =
   NativeStackScreenProps<RootStackParamList, T>;
 
 // Makes useNavigation() know your routes everywhere.
+// React Navigation requires this global namespace augmentation, so the two
+// lint rules are disabled on exactly these lines.
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace ReactNavigation {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface RootParamList extends RootStackParamList {}
   }
 }
