@@ -1,18 +1,21 @@
-# CODEOWNERS — replace @your-org / @usernames with real handles.
-# Frontend screens + navigation
-/apps/mobile/src/screens/ @your-org/mobile-team
-/apps/mobile/src/components/ @your-org/mobile-team
-/apps/mobile/src/navigation/ @your-org/mobile-team
+# CODEOWNERS — every path requires a maintainer approval.
+# Maintainers: @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
+# Developers get review requests by assignment, not ownership, so no PR
+# can merge without a maintainer.
 
-# Missions — one owner per mission to avoid conflicts
-/apps/mobile/src/missions/math.ts @teammate-math
-/apps/mobile/src/missions/shake.ts @teammate-shake
+# Frontend — screens, components, navigation
+/apps/mobile/src/screens/ @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
+/apps/mobile/src/components/ @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
+/apps/mobile/src/navigation/ @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
 
-# Backend — Firestore rules + functions need backend approval
-/backend/ @your-org/backend-team
-/packages/shared-types/ @your-org/backend-team @your-org/mobile-team
+# Missions — one line per mission so ownership stays visible as missions grow
+/apps/mobile/src/missions/ @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
+
+# Backend + shared contract — maintainer approval required
+/backend/ @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
+/packages/shared-types/ @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
 
 # Repo hygiene — maintainer approval required
-/.github/ @your-org/maintainers
-/package.json @your-org/maintainers
-/eslint.config.mjs @your-org/maintainers
+/.github/ @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
+/package.json @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
+/eslint.config.mjs @ayushmanmishra18 @zatchbell1311-wq @ramstienglobalventurepvtltd-star
