@@ -14,7 +14,7 @@ import type { MainTabParamList } from '../../types/navigation';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Morning'>;
 
-const MorningDashboardScreen = ({ _navigation }: Props) => {
+const MorningDashboardScreen = () => {
   const habits = [
     {
       id: 'water',
