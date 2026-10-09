@@ -1,3 +1,4 @@
+
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { StoredAlarm } from '../storage/alarmStorage';
@@ -47,13 +48,13 @@ export type AlarmScreenProps<T extends keyof AlarmStackParamList> =
 export type RootScreenProps<T extends keyof RootStackParamList> =
   NativeStackScreenProps<RootStackParamList, T>;
 
-// Makes useNavigation() know your routes everywhere.
-// React Navigation requires this global namespace augmentation, so the two
-// lint rules are disabled on exactly these lines.
+// React Navigation requires this global namespace augmentation.
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
+  /* eslint-disable @typescript-eslint/no-namespace */
   namespace ReactNavigation {
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    /* eslint-disable @typescript-eslint/no-empty-object-type */
     interface RootParamList extends RootStackParamList {}
+    /* eslint-enable @typescript-eslint/no-empty-object-type */
   }
+  /* eslint-enable @typescript-eslint/no-namespace */
 }
