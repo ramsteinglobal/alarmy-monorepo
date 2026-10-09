@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {},
+  "references": [
+    { "path": "./apps/mobile" },
+    { "path": "./packages/shared-types" },
+    { "path": "./backend/functions" }
+  ]
+}

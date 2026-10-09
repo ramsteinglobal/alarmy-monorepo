@@ -1,0 +1,29 @@
+node_modules
+dist
+build
+.expo
+*.log
+.DS_Store
+
+# Expo / React Native
+.expo-shared
+web-build
+
+# Firebase
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+backend/functions/lib
+
+# Env — NEVER commit real keys
+.env
+.env.*
+!.env.example
+apps/mobile/.env
+
+# OS / IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea

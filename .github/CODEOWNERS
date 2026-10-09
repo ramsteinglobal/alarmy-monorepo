@@ -1,0 +1,18 @@
+# CODEOWNERS — replace @your-org / @usernames with real handles.
+# Frontend screens + navigation
+/apps/mobile/src/screens/ @your-org/mobile-team
+/apps/mobile/src/components/ @your-org/mobile-team
+/apps/mobile/src/navigation/ @your-org/mobile-team
+
+# Missions — one owner per mission to avoid conflicts
+/apps/mobile/src/missions/math.ts @teammate-math
+/apps/mobile/src/missions/shake.ts @teammate-shake
+
+# Backend — Firestore rules + functions need backend approval
+/backend/ @your-org/backend-team
+/packages/shared-types/ @your-org/backend-team @your-org/mobile-team
+
+# Repo hygiene — maintainer approval required
+/.github/ @your-org/maintainers
+/package.json @your-org/maintainers
+/eslint.config.mjs @your-org/maintainers

@@ -1,0 +1,6 @@
+# CodeRabbit — no config file needed for defaults.
+# Maintainer: install from https://github.com/marketplace/coderabbit-ai
+# then enable auto-review on PRs. Optional overrides go in .coderabbit.yaml.
+reviews:
+  profile: chill
+  request_changes_workflow: false

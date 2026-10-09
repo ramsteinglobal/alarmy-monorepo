@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+.expo/
+web-build/
+backend/functions/lib/
+firebase-debug.log
+*.log
