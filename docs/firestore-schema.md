@@ -3,7 +3,12 @@
 ## `users/{uid}`
 
 ```ts
-{ uid: string; email: string | null; displayName: string | null; createdAt: number }
+{
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  createdAt: number;
+}
 ```
 
 ## `alarms/{alarmId}`

@@ -3,7 +3,9 @@ export type MathChallenge = {
   answer: number;
 };
 
-export function generateMathChallenge(difficulty: 'easy' | 'normal' | 'hard' = 'normal'): MathChallenge {
+export function generateMathChallenge(
+  difficulty: 'easy' | 'normal' | 'hard' = 'normal',
+): MathChallenge {
   const max = difficulty === 'easy' ? 10 : difficulty === 'normal' ? 50 : 100;
   const a = Math.floor(Math.random() * max) + 1;
   const b = Math.floor(Math.random() * max) + 1;

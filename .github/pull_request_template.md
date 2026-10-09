@@ -26,4 +26,5 @@
 ## Schema change?
 
 <!-- If you touched Alarm / AppUser types, describe migration + rules update -->
+
 None / Yes — details:

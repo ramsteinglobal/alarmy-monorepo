@@ -20,5 +20,6 @@ export const nightlyAlarmCleanup = onSchedule('every day 03:00', async () => {
     }
   });
   await batch.commit();
+  // eslint-disable-next-line no-console
   console.log(`nightlyAlarmCleanup: deleted ${count} stale alarms`);
 });

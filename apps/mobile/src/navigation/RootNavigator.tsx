@@ -17,7 +17,11 @@ export function RootNavigator() {
   return (
     <Stack.Navigator initialRouteName="Home">
       <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Alarme' }} />
-      <Stack.Screen name="CreateAlarm" component={CreateAlarmScreen} options={{ title: 'New alarm' }} />
+      <Stack.Screen
+        name="CreateAlarm"
+        component={CreateAlarmScreen}
+        options={{ title: 'New alarm' }}
+      />
       <Stack.Screen
         name="Ringing"
         component={RingingScreen}

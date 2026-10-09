@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-native",
-    "types": ["react-native"]
+    "types": ["react-native", "node"]
   },
-  "include": ["src", "index.js", "babel.config.js"],
-  "references": [{ "path": "../../packages/shared-types" }]
+  "include": ["src", "index.js", "babel.config.js"]
 }

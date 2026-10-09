@@ -23,12 +23,12 @@ for extreme sleepers.
 
 ## Our MVP scope
 
-| Milestone | Scope |
-|---|---|
-| M1 | Auth + alarm CRUD + local ringing + math mission |
-| M2 | Shake mission + Firestore sync + FCM via Functions |
-| M3 | Photo + QR missions + Storage rules + wake-up re-check |
-| Later | Squat/walking (sensors), sounds, sleep stats, premium |
+| Milestone | Scope                                                  |
+| --------- | ------------------------------------------------------ |
+| M1        | Auth + alarm CRUD + local ringing + math mission       |
+| M2        | Shake mission + Firestore sync + FCM via Functions     |
+| M3        | Photo + QR missions + Storage rules + wake-up re-check |
+| Later     | Squat/walking (sensors), sounds, sleep stats, premium  |
 
 ## Non-negotiables for our clone
 
