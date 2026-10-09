@@ -8,11 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { COLORS } from '../../theme';
-import type { MainTabParamList } from '../../types/navigation';
-
-type Props = BottomTabScreenProps<MainTabParamList, 'Sleep'>;
 
 const SleepDashboardScreen = () => {
   const sleepData = useMemo(
