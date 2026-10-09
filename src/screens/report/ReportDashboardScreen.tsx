@@ -27,7 +27,7 @@ type WeekData = {
   height: number;
 };
 
-const ReportDashboardScreen = ({ navigation }: Props) => {
+const ReportDashboardScreen = ({ _navigation }: Props) => {
   const [history, setHistory] = useState<AlarmHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
