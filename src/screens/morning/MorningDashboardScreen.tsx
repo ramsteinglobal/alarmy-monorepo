@@ -8,11 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { COLORS } from '../../theme';
-import type { MainTabParamList } from '../../types/navigation';
-
-type Props = BottomTabScreenProps<MainTabParamList, 'Morning'>;
 
 const MorningDashboardScreen = () => {
   const habits = [
@@ -188,7 +184,7 @@ const MorningDashboardScreen = () => {
 
           {/* Morning Routine */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
+            <Text style={styles.sectionHeaderTitle}>
               Morning Routine
             </Text>
 
