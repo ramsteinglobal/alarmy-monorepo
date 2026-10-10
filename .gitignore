@@ -27,3 +27,7 @@ apps/mobile/.env
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea
+
+android/app/.cxx
+android/.gradle
+.npm-cache
