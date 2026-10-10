@@ -22,7 +22,8 @@ export default function AlarmListItem({ alarm, onToggle, onEdit, onDelete, onTes
         <View
           style={styles.timeRow}
           accessible
-          accessibilityLabel={`${alarm.time} ${alarm.period}, ${alarm.days || 'Once'}`}>
+          accessibilityLabel={`${alarm.time} ${alarm.period}, ${alarm.days || 'Once'}`}
+        >
           <Text style={styles.time}>{alarm.time}</Text>
           <Text style={styles.period}>{alarm.period}</Text>
         </View>
@@ -57,10 +58,20 @@ export default function AlarmListItem({ alarm, onToggle, onEdit, onDelete, onTes
               <Text style={styles.test}>Test ring</Text>
             </TouchableOpacity>
           ) : null}
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Edit alarm ${alarm.time} ${alarm.period}`} onPress={onEdit} style={styles.link}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`Edit alarm ${alarm.time} ${alarm.period}`}
+            onPress={onEdit}
+            style={styles.link}
+          >
             <Text style={styles.edit}>Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Delete alarm ${alarm.time} ${alarm.period}`} onPress={onDelete} style={styles.link}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={`Delete alarm ${alarm.time} ${alarm.period}`}
+            onPress={onDelete}
+            style={styles.link}
+          >
             <Text style={styles.delete}>Delete</Text>
           </TouchableOpacity>
         </View>
@@ -75,9 +86,19 @@ const styles = StyleSheet.create({
   timeRow: { flexDirection: 'row', alignItems: 'baseline' },
   time: { fontSize: 38, fontWeight: '700', color: COLORS.text },
   period: { marginLeft: 6, fontSize: FONT.bodyLg, fontWeight: '700', color: COLORS.accent },
-  daysRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 },
+  daysRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 2,
+  },
   days: { fontSize: FONT.body, color: COLORS.muted },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, backgroundColor: COLORS.accentTint },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.accentTint,
+  },
   badgeOff: { backgroundColor: COLORS.divider },
   badgeText: { fontSize: FONT.caption, fontWeight: '700', color: COLORS.accent },
   badgeTextOff: { color: COLORS.muted },

@@ -21,13 +21,55 @@ export type Mission = {
 };
 
 export const MISSIONS: Mission[] = [
-  { id: 'math', title: 'Math Mission', description: 'Solve a quick math problem', icon: '∑', difficulty: 'Medium' },
-  { id: 'photo', title: 'Photo Mission', description: 'Take a photo of a registered object', icon: '▣', difficulty: 'Easy' },
-  { id: 'barcode', title: 'Barcode Mission', description: 'Scan your registered barcode', icon: '▥', difficulty: 'Medium' },
-  { id: 'memory', title: 'Memory Mission', description: 'Remember and repeat the sequence', icon: '◆', difficulty: 'Hard' },
-  { id: 'typing', title: 'Typing Mission', description: 'Type the displayed sentence', icon: '⌨', difficulty: 'Medium' },
-  { id: 'shake', title: 'Shake Mission', description: 'Shake your phone to wake up', icon: '↔', difficulty: 'Easy' },
-  { id: 'squat', title: 'Squat Mission', description: 'Complete the required squats', icon: '↕', difficulty: 'Hard' },
+  {
+    id: 'math',
+    title: 'Math Mission',
+    description: 'Solve a quick math problem',
+    icon: '∑',
+    difficulty: 'Medium',
+  },
+  {
+    id: 'photo',
+    title: 'Photo Mission',
+    description: 'Take a photo of a registered object',
+    icon: '▣',
+    difficulty: 'Easy',
+  },
+  {
+    id: 'barcode',
+    title: 'Barcode Mission',
+    description: 'Scan your registered barcode',
+    icon: '▥',
+    difficulty: 'Medium',
+  },
+  {
+    id: 'memory',
+    title: 'Memory Mission',
+    description: 'Remember and repeat the sequence',
+    icon: '◆',
+    difficulty: 'Hard',
+  },
+  {
+    id: 'typing',
+    title: 'Typing Mission',
+    description: 'Type the displayed sentence',
+    icon: '⌨',
+    difficulty: 'Medium',
+  },
+  {
+    id: 'shake',
+    title: 'Shake Mission',
+    description: 'Shake your phone to wake up',
+    icon: '↔',
+    difficulty: 'Easy',
+  },
+  {
+    id: 'squat',
+    title: 'Squat Mission',
+    description: 'Complete the required squats',
+    icon: '↕',
+    difficulty: 'Hard',
+  },
 ];
 
 export const DEFAULT_SOUND = SOUNDS[0];

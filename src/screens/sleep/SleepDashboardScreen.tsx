@@ -1,11 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLORS } from '../../theme';
@@ -25,23 +19,15 @@ const SleepDashboardScreen = () => {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.container}>
-
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerSmall}>
-              TODAY
-            </Text>
+            <Text style={styles.headerSmall}>TODAY</Text>
 
-            <Text style={styles.headerTitle}>
-              Sleep
-            </Text>
+            <Text style={styles.headerTitle}>Sleep</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.menuButton}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.menuButton} activeOpacity={0.7}>
             <Text style={styles.menuText}>⋮</Text>
           </TouchableOpacity>
         </View>
@@ -50,20 +36,13 @@ const SleepDashboardScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-
           {/* Sleep Summary */}
           <View style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>
-              LAST NIGHT
-            </Text>
+            <Text style={styles.summaryLabel}>LAST NIGHT</Text>
 
-            <Text style={styles.duration}>
-              {sleepData.duration}
-            </Text>
+            <Text style={styles.duration}>{sleepData.duration}</Text>
 
-            <Text style={styles.durationSubtitle}>
-              of {sleepData.goal} goal
-            </Text>
+            <Text style={styles.durationSubtitle}>of {sleepData.goal} goal</Text>
 
             {/* Progress */}
             <View style={styles.progressBackground}>
@@ -71,10 +50,7 @@ const SleepDashboardScreen = () => {
                 style={[
                   styles.progressFill,
                   {
-                    width: `${Math.min(
-                      (465 / 480) * 100,
-                      100,
-                    )}%`,
+                    width: `${Math.min((465 / 480) * 100, 100)}%`,
                   },
                 ]}
               />
@@ -82,181 +58,102 @@ const SleepDashboardScreen = () => {
 
             <View style={styles.sleepTimes}>
               <View>
-                <Text style={styles.timeLabel}>
-                  BEDTIME
-                </Text>
+                <Text style={styles.timeLabel}>BEDTIME</Text>
 
-                <Text style={styles.timeValue}>
-                  {sleepData.bedtime}
-                </Text>
+                <Text style={styles.timeValue}>{sleepData.bedtime}</Text>
               </View>
 
               <View style={styles.timeRight}>
-                <Text style={styles.timeLabel}>
-                  WAKE UP
-                </Text>
+                <Text style={styles.timeLabel}>WAKE UP</Text>
 
-                <Text style={styles.timeValue}>
-                  {sleepData.wakeTime}
-                </Text>
+                <Text style={styles.timeValue}>{sleepData.wakeTime}</Text>
               </View>
             </View>
           </View>
 
           {/* Sleep Quality */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              Sleep Quality
-            </Text>
+            <Text style={styles.sectionTitle}>Sleep Quality</Text>
 
-            <Text style={styles.sectionValue}>
-              {sleepData.quality}%
-            </Text>
+            <Text style={styles.sectionValue}>{sleepData.quality}%</Text>
           </View>
 
           <View style={styles.qualityCard}>
             <View style={styles.qualityCircle}>
-              <Text style={styles.qualityNumber}>
-                {sleepData.quality}
-              </Text>
+              <Text style={styles.qualityNumber}>{sleepData.quality}</Text>
 
-              <Text style={styles.qualityPercent}>
-                %
-              </Text>
+              <Text style={styles.qualityPercent}>%</Text>
             </View>
 
             <View style={styles.qualityContent}>
-              <Text style={styles.qualityTitle}>
-                Good sleep
-              </Text>
+              <Text style={styles.qualityTitle}>Good sleep</Text>
 
               <Text style={styles.qualityDescription}>
-                Your sleep duration was close to your
-                target last night.
+                Your sleep duration was close to your target last night.
               </Text>
             </View>
           </View>
 
           {/* Sleep Details */}
-          <Text style={styles.detailsTitle}>
-            Sleep Details
-          </Text>
+          <Text style={styles.detailsTitle}>Sleep Details</Text>
 
           <View style={styles.detailsCard}>
-
-            <SleepDetail
-              icon="◷"
-              label="Time asleep"
-              value="7h 45m"
-            />
+            <SleepDetail icon="◷" label="Time asleep" value="7h 45m" />
 
             <View style={styles.divider} />
 
-            <SleepDetail
-              icon="☾"
-              label="Bedtime"
-              value="11:15 PM"
-            />
+            <SleepDetail icon="☾" label="Bedtime" value="11:15 PM" />
 
             <View style={styles.divider} />
 
-            <SleepDetail
-              icon="☀"
-              label="Wake up"
-              value="7:00 AM"
-            />
+            <SleepDetail icon="☀" label="Wake up" value="7:00 AM" />
 
             <View style={styles.divider} />
 
-            <SleepDetail
-              icon="↗"
-              label="Sleep consistency"
-              value="Good"
-            />
-
+            <SleepDetail icon="↗" label="Sleep consistency" value="Good" />
           </View>
 
           {/* Weekly History */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              This Week
-            </Text>
+            <Text style={styles.sectionTitle}>This Week</Text>
 
             <TouchableOpacity activeOpacity={0.7}>
-              <Text style={styles.viewAll}>
-                View all
-              </Text>
+              <Text style={styles.viewAll}>View all</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.weekCard}>
-            <WeekDay
-              day="M"
-              hours="7.5"
-              active
-            />
+            <WeekDay day="M" hours="7.5" active />
 
-            <WeekDay
-              day="T"
-              hours="7.8"
-              active
-            />
+            <WeekDay day="T" hours="7.8" active />
 
-            <WeekDay
-              day="W"
-              hours="6.9"
-              active
-            />
+            <WeekDay day="W" hours="6.9" active />
 
-            <WeekDay
-              day="T"
-              hours="7.7"
-              active
-            />
+            <WeekDay day="T" hours="7.7" active />
 
-            <WeekDay
-              day="F"
-              hours="7.2"
-              active
-            />
+            <WeekDay day="F" hours="7.2" active />
 
-            <WeekDay
-              day="S"
-              hours="8.0"
-              active
-            />
+            <WeekDay day="S" hours="8.0" active />
 
-            <WeekDay
-              day="S"
-              hours="--"
-            />
+            <WeekDay day="S" hours="--" />
           </View>
 
           {/* Sleep Goal */}
           <View style={styles.goalCard}>
             <View style={styles.goalIcon}>
-              <Text style={styles.goalIconText}>
-                ☾
-              </Text>
+              <Text style={styles.goalIconText}>☾</Text>
             </View>
 
             <View style={styles.goalContent}>
-              <Text style={styles.goalTitle}>
-                Sleep Goal
-              </Text>
+              <Text style={styles.goalTitle}>Sleep Goal</Text>
 
-              <Text style={styles.goalText}>
-                Try to get at least 8 hours tonight.
-              </Text>
+              <Text style={styles.goalText}>Try to get at least 8 hours tonight.</Text>
             </View>
 
-            <Text style={styles.goalArrow}>
-              ›
-            </Text>
+            <Text style={styles.goalArrow}>›</Text>
           </View>
 
           <View style={styles.bottomSpace} />
-
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -273,26 +170,16 @@ type SleepDetailProps = {
   value: string;
 };
 
-const SleepDetail = ({
-  icon,
-  label,
-  value,
-}: SleepDetailProps) => {
+const SleepDetail = ({ icon, label, value }: SleepDetailProps) => {
   return (
     <View style={styles.detailRow}>
       <View style={styles.detailIcon}>
-        <Text style={styles.detailIconText}>
-          {icon}
-        </Text>
+        <Text style={styles.detailIconText}>{icon}</Text>
       </View>
 
-      <Text style={styles.detailLabel}>
-        {label}
-      </Text>
+      <Text style={styles.detailLabel}>{label}</Text>
 
-      <Text style={styles.detailValue}>
-        {value}
-      </Text>
+      <Text style={styles.detailValue}>{value}</Text>
     </View>
   );
 };
@@ -307,23 +194,12 @@ type WeekDayProps = {
   active?: boolean;
 };
 
-const WeekDay = ({
-  day,
-  hours,
-  active = false,
-}: WeekDayProps) => {
+const WeekDay = ({ day, hours, active = false }: WeekDayProps) => {
   return (
     <View style={styles.weekDay}>
-      <Text style={styles.weekDayName}>
-        {day}
-      </Text>
+      <Text style={styles.weekDayName}>{day}</Text>
 
-      <View
-        style={[
-          styles.weekBarContainer,
-          !active && styles.weekBarInactive,
-        ]}
-      >
+      <View style={[styles.weekBarContainer, !active && styles.weekBarInactive]}>
         {active && (
           <View
             style={[
@@ -347,9 +223,7 @@ const WeekDay = ({
         )}
       </View>
 
-      <Text style={styles.weekHours}>
-        {hours}
-      </Text>
+      <Text style={styles.weekHours}>{hours}</Text>
     </View>
   );
 };

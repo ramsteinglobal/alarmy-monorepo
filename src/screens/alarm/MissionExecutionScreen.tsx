@@ -92,7 +92,10 @@ export default function MissionExecutionScreen({
 
   return (
     <Screen>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
           <View style={styles.header}>
             <Text style={styles.headerLabel}>MISSION</Text>
@@ -104,9 +107,19 @@ export default function MissionExecutionScreen({
             </Text>
           </View>
 
-          <View style={styles.progressTrack} accessible accessibilityRole="progressbar"
-            accessibilityValue={{ min: 0, max: 100, now: Math.round(progress * 100) }}>
-            <View style={[styles.progressFill, completed && styles.progressComplete, { width: `${progress * 100}%` }]} />
+          <View
+            style={styles.progressTrack}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityValue={{ min: 0, max: 100, now: Math.round(progress * 100) }}
+          >
+            <View
+              style={[
+                styles.progressFill,
+                completed && styles.progressComplete,
+                { width: `${progress * 100}%` },
+              ]}
+            />
           </View>
           <Text style={styles.progressText}>
             {completed ? 'Mission completed' : 'Complete the mission to continue'}
@@ -127,13 +140,40 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: SPACING.lg, paddingBottom: SPACING.xl },
   header: { alignItems: 'center' },
-  headerLabel: { fontSize: FONT.caption, fontWeight: '700', letterSpacing: 2, color: COLORS.accent },
-  headerTitle: { marginTop: 6, fontSize: FONT.headline, fontWeight: '700', color: COLORS.text, textAlign: 'center' },
-  headerDescription: { marginTop: 6, fontSize: FONT.body, color: COLORS.muted, textAlign: 'center' },
-  progressTrack: { height: 8, borderRadius: RADIUS.pill, backgroundColor: COLORS.divider, marginTop: SPACING.lg, overflow: 'hidden' },
+  headerLabel: {
+    fontSize: FONT.caption,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: COLORS.accent,
+  },
+  headerTitle: {
+    marginTop: 6,
+    fontSize: FONT.headline,
+    fontWeight: '700',
+    color: COLORS.text,
+    textAlign: 'center',
+  },
+  headerDescription: {
+    marginTop: 6,
+    fontSize: FONT.body,
+    color: COLORS.muted,
+    textAlign: 'center',
+  },
+  progressTrack: {
+    height: 8,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.divider,
+    marginTop: SPACING.lg,
+    overflow: 'hidden',
+  },
   progressFill: { height: 8, borderRadius: RADIUS.pill, backgroundColor: COLORS.accent },
   progressComplete: { backgroundColor: COLORS.success },
   progressText: { marginTop: 8, textAlign: 'center', fontSize: FONT.caption, color: COLORS.muted },
   mission: { marginTop: SPACING.lg },
-  bottomInfo: { marginTop: SPACING.xl, textAlign: 'center', fontSize: FONT.caption, color: COLORS.muted },
+  bottomInfo: {
+    marginTop: SPACING.xl,
+    textAlign: 'center',
+    fontSize: FONT.caption,
+    color: COLORS.muted,
+  },
 });

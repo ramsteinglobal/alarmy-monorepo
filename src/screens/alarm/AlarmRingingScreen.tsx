@@ -37,8 +37,7 @@ export default function AlarmRingingScreen({
   };
 
   // Development shortcut only. Remove once real scheduling is in place.
-  const handleDismiss = () =>
-    navigation.reset({ index: 0, routes: [{ name: 'AlarmDashboard' }] });
+  const handleDismiss = () => navigation.reset({ index: 0, routes: [{ name: 'AlarmDashboard' }] });
 
   return (
     <Screen>
@@ -95,7 +94,11 @@ export default function AlarmRingingScreen({
         <View style={styles.actions}>
           <PrimaryButton label="START MISSION" onPress={handleStartMission} />
           {__DEV__ ? (
-            <PrimaryButton label="Dismiss for now (dev only)" variant="ghost" onPress={handleDismiss} />
+            <PrimaryButton
+              label="Dismiss for now (dev only)"
+              variant="ghost"
+              onPress={handleDismiss}
+            />
           ) : null}
         </View>
       </View>
@@ -106,7 +109,12 @@ export default function AlarmRingingScreen({
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: SPACING.md },
   header: { alignItems: 'center' },
-  headerLabel: { fontSize: FONT.caption, fontWeight: '700', letterSpacing: 2, color: COLORS.accent },
+  headerLabel: {
+    fontSize: FONT.caption,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: COLORS.accent,
+  },
   headerTitle: { marginTop: 6, fontSize: FONT.headline, fontWeight: '700', color: COLORS.text },
   timeSection: { alignItems: 'center', marginTop: 34, marginBottom: 26 },
   time: { fontSize: FONT.display, lineHeight: 70, fontWeight: '700', color: COLORS.text },
@@ -125,6 +133,12 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: COLORS.divider, marginVertical: SPACING.md },
   instructionBox: { marginTop: 18, paddingHorizontal: 8, alignItems: 'center' },
   instructionTitle: { fontSize: FONT.body, fontWeight: '700', color: COLORS.text },
-  instructionText: { marginTop: 5, fontSize: FONT.caption + 1, lineHeight: 18, textAlign: 'center', color: COLORS.muted },
+  instructionText: {
+    marginTop: 5,
+    fontSize: FONT.caption + 1,
+    lineHeight: 18,
+    textAlign: 'center',
+    color: COLORS.muted,
+  },
   actions: { marginTop: 'auto', paddingBottom: SPACING.md, gap: SPACING.sm },
 });

@@ -37,7 +37,8 @@ export default function TimeStepper({ label, value, onIncrement, onDecrement }: 
         onLongPress={hold(inc)}
         onPressOut={stop}
         delayLongPress={350}
-        style={styles.arrowButton}>
+        style={styles.arrowButton}
+      >
         <Text style={styles.arrow}>▲</Text>
       </TouchableOpacity>
 
@@ -49,7 +50,8 @@ export default function TimeStepper({ label, value, onIncrement, onDecrement }: 
         onAccessibilityAction={e =>
           e.nativeEvent.actionName === 'increment' ? onIncrement() : onDecrement()
         }
-        style={styles.value}>
+        style={styles.value}
+      >
         {value}
       </Text>
 
@@ -60,7 +62,8 @@ export default function TimeStepper({ label, value, onIncrement, onDecrement }: 
         onLongPress={hold(dec)}
         onPressOut={stop}
         delayLongPress={350}
-        style={styles.arrowButton}>
+        style={styles.arrowButton}
+      >
         <Text style={styles.arrow}>▼</Text>
       </TouchableOpacity>
     </View>

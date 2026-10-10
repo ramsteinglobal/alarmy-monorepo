@@ -39,7 +39,10 @@ export default function CounterMission({
   return (
     <>
       <MissionCard icon={icon} title={title} hint={description}>
-        <Text accessibilityLiveRegion="polite" style={{ marginTop: 10, fontSize: 36, fontWeight: '700', color: COLORS.accent }}>
+        <Text
+          accessibilityLiveRegion="polite"
+          style={{ marginTop: 10, fontSize: 36, fontWeight: '700', color: COLORS.accent }}
+        >
           {count} / {target}
         </Text>
       </MissionCard>

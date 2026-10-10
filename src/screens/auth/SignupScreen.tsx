@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
@@ -48,16 +41,11 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <Text style={styles.title}>Create Account</Text>
 
-        <Text style={styles.subtitle}>
-          Start your journey to energizing morning routines
-        </Text>
+        <Text style={styles.subtitle}>Start your journey to energizing morning routines</Text>
 
         {/* Social Login */}
         <View style={styles.socialRow}>
@@ -120,9 +108,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
         {/* Password strength */}
         {passwordStrength !== '' && (
           <View style={styles.passwordStrengthRow}>
-            <Text style={styles.passwordStrengthLabel}>
-              Password strength
-            </Text>
+            <Text style={styles.passwordStrengthLabel}>Password strength</Text>
 
             <Text
               style={[
@@ -151,27 +137,17 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
             return (
               <TouchableOpacity
                 key={persona.id}
-                style={[
-                  styles.personaCard,
-                  selected && styles.personaCardSelected,
-                ]}
+                style={[styles.personaCard, selected && styles.personaCardSelected]}
                 onPress={() => setSelectedPersona(persona.id)}
                 activeOpacity={0.8}
               >
                 <Text style={styles.personaIcon}>{persona.icon}</Text>
 
-                <Text
-                  style={[
-                    styles.personaTitle,
-                    selected && styles.personaTitleSelected,
-                  ]}
-                >
+                <Text style={[styles.personaTitle, selected && styles.personaTitleSelected]}>
                   {persona.title}
                 </Text>
 
-                <Text style={styles.personaSubtitle}>
-                  {persona.subtitle}
-                </Text>
+                <Text style={styles.personaSubtitle}>{persona.subtitle}</Text>
               </TouchableOpacity>
             );
           })}
@@ -183,18 +159,11 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
           onPress={() => setAcceptedTerms(!acceptedTerms)}
           activeOpacity={0.8}
         >
-          <View
-            style={[
-              styles.checkbox,
-              acceptedTerms && styles.checkboxSelected,
-            ]}
-          >
+          <View style={[styles.checkbox, acceptedTerms && styles.checkboxSelected]}>
             {acceptedTerms && <Text style={styles.check}>✓</Text>}
           </View>
 
-          <Text style={styles.termsText}>
-            I agree to Terms & Privacy Policy
-          </Text>
+          <Text style={styles.termsText}>I agree to Terms & Privacy Policy</Text>
         </TouchableOpacity>
 
         {/* Create Account */}
@@ -203,18 +172,13 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
           onPress={() => navigation.replace('Main')}
           activeOpacity={0.8}
         >
-          <Text style={styles.primaryText}>
-            Create Free Account →
-          </Text>
+          <Text style={styles.primaryText}>Create Free Account →</Text>
         </TouchableOpacity>
 
         {/* Sign In */}
         <Text style={styles.bottomText}>
           Already registered?{' '}
-          <Text
-            style={styles.signInLink}
-            onPress={() => navigation.goBack()}
-          >
+          <Text style={styles.signInLink} onPress={() => navigation.goBack()}>
             Sign In
           </Text>
         </Text>

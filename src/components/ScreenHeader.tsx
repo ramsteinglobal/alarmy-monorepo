@@ -14,13 +14,16 @@ export default function ScreenHeader({ title, subtitle, onBack }: Props) {
             accessibilityLabel="Go back"
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             onPress={onBack}
-            style={styles.back}>
+            style={styles.back}
+          >
             <Text style={styles.backGlyph}>‹</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.back} />
         )}
-        <Text accessibilityRole="header" style={styles.title}>{title}</Text>
+        <Text accessibilityRole="header" style={styles.title}>
+          {title}
+        </Text>
         <View style={styles.back} />
       </View>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}

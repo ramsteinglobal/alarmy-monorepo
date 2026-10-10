@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 import Screen from '../../components/Screen';
 import { COLORS } from '../../theme';
@@ -18,68 +10,46 @@ export default function SettingsDashboardScreen() {
   const [gradualVolume, setGradualVolume] = useState(true);
 
   const showComingSoon = (title: string) => {
-    Alert.alert(
-      title,
-      `${title} settings will be available soon.`,
-    );
+    Alert.alert(title, `${title} settings will be available soon.`);
   };
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {/* Header */}
 
         <View style={styles.header}>
-          <Text style={styles.headerSmall}>
-            APP PREFERENCES
-          </Text>
+          <Text style={styles.headerSmall}>APP PREFERENCES</Text>
 
-          <Text style={styles.headerTitle}>
-            Settings
-          </Text>
+          <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
         {/* Profile */}
 
         <View style={styles.profileCard}>
           <View style={styles.profileAvatar}>
-            <Text style={styles.profileAvatarText}>
-              I
-            </Text>
+            <Text style={styles.profileAvatarText}>I</Text>
           </View>
 
           <View style={styles.profileContent}>
-            <Text style={styles.profileName}>
-              Alarm User
-            </Text>
+            <Text style={styles.profileName}>Alarm User</Text>
 
-            <Text style={styles.profileSubtitle}>
-              Manage your wake-up experience
-            </Text>
+            <Text style={styles.profileSubtitle}>Manage your wake-up experience</Text>
           </View>
 
-          <Text style={styles.arrow}>
-            ›
-          </Text>
+          <Text style={styles.arrow}>›</Text>
         </View>
 
         {/* Alarm Settings */}
 
-        <Text style={styles.sectionTitle}>
-          ALARM SETTINGS
-        </Text>
+        <Text style={styles.sectionTitle}>ALARM SETTINGS</Text>
 
         <View style={styles.card}>
           <SettingRow
             icon="♪"
             title="Default Sound"
             subtitle="Choose your default alarm sound"
-            onPress={() =>
-              showComingSoon('Default Sound')
-            }
+            onPress={() => showComingSoon('Default Sound')}
           />
 
           <View style={styles.divider} />
@@ -88,9 +58,7 @@ export default function SettingsDashboardScreen() {
             icon="✓"
             title="Missions"
             subtitle="Manage wake-up missions"
-            onPress={() =>
-              showComingSoon('Missions')
-            }
+            onPress={() => showComingSoon('Missions')}
           />
 
           <View style={styles.divider} />
@@ -99,17 +67,13 @@ export default function SettingsDashboardScreen() {
             icon="◷"
             title="Alarm Behavior"
             subtitle="Configure alarm behavior"
-            onPress={() =>
-              showComingSoon('Alarm Behavior')
-            }
+            onPress={() => showComingSoon('Alarm Behavior')}
           />
         </View>
 
         {/* Notifications */}
 
-        <Text style={styles.sectionTitle}>
-          NOTIFICATIONS
-        </Text>
+        <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
 
         <View style={styles.card}>
           <ToggleRow
@@ -143,18 +107,14 @@ export default function SettingsDashboardScreen() {
 
         {/* Sleep Preferences */}
 
-        <Text style={styles.sectionTitle}>
-          SLEEP PREFERENCES
-        </Text>
+        <Text style={styles.sectionTitle}>SLEEP PREFERENCES</Text>
 
         <View style={styles.card}>
           <SettingRow
             icon="☾"
             title="Sleep Goal"
             subtitle="Set your target sleep duration"
-            onPress={() =>
-              showComingSoon('Sleep Goal')
-            }
+            onPress={() => showComingSoon('Sleep Goal')}
           />
 
           <View style={styles.divider} />
@@ -163,26 +123,20 @@ export default function SettingsDashboardScreen() {
             icon="☀"
             title="Morning Routine"
             subtitle="Customize your morning routine"
-            onPress={() =>
-              showComingSoon('Morning Routine')
-            }
+            onPress={() => showComingSoon('Morning Routine')}
           />
         </View>
 
         {/* Support */}
 
-        <Text style={styles.sectionTitle}>
-          SUPPORT
-        </Text>
+        <Text style={styles.sectionTitle}>SUPPORT</Text>
 
         <View style={styles.card}>
           <SettingRow
             icon="?"
             title="Help & Support"
             subtitle="Get help with the app"
-            onPress={() =>
-              showComingSoon('Help & Support')
-            }
+            onPress={() => showComingSoon('Help & Support')}
           />
 
           <View style={styles.divider} />
@@ -191,27 +145,19 @@ export default function SettingsDashboardScreen() {
             icon="i"
             title="About"
             subtitle="Alarmy Clone App"
-            onPress={() =>
-              Alert.alert(
-                'About',
-                'Alarmy Clone App\nVersion 1.0.0',
-              )
-            }
+            onPress={() => Alert.alert('About', 'Alarmy Clone App\nVersion 1.0.0')}
           />
         </View>
 
         {/* Version */}
 
-        <Text style={styles.version}>
-          Version 1.0.0
-        </Text>
+        <Text style={styles.version}>Version 1.0.0</Text>
 
         <View style={styles.bottomSpace} />
       </ScrollView>
     </Screen>
   );
 }
-
 
 // ======================================================
 // SETTING ROW
@@ -229,34 +175,21 @@ function SettingRow({
   onPress: () => void;
 }) {
   return (
-    <TouchableOpacity
-      style={styles.row}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.iconBox}>
-        <Text style={styles.iconText}>
-          {icon}
-        </Text>
+        <Text style={styles.iconText}>{icon}</Text>
       </View>
 
       <View style={styles.rowContent}>
-        <Text style={styles.rowTitle}>
-          {title}
-        </Text>
+        <Text style={styles.rowTitle}>{title}</Text>
 
-        <Text style={styles.rowSubtitle}>
-          {subtitle}
-        </Text>
+        <Text style={styles.rowSubtitle}>{subtitle}</Text>
       </View>
 
-      <Text style={styles.arrow}>
-        ›
-      </Text>
+      <Text style={styles.arrow}>›</Text>
     </TouchableOpacity>
   );
 }
-
 
 // ======================================================
 // TOGGLE ROW
@@ -278,19 +211,13 @@ function ToggleRow({
   return (
     <View style={styles.row}>
       <View style={styles.iconBox}>
-        <Text style={styles.iconText}>
-          {icon}
-        </Text>
+        <Text style={styles.iconText}>{icon}</Text>
       </View>
 
       <View style={styles.rowContent}>
-        <Text style={styles.rowTitle}>
-          {title}
-        </Text>
+        <Text style={styles.rowTitle}>{title}</Text>
 
-        <Text style={styles.rowSubtitle}>
-          {subtitle}
-        </Text>
+        <Text style={styles.rowSubtitle}>{subtitle}</Text>
       </View>
 
       <Switch
@@ -300,16 +227,11 @@ function ToggleRow({
           false: '#D8D8D8',
           true: COLORS.accentSoft,
         }}
-        thumbColor={
-          value
-            ? COLORS.accent
-            : COLORS.surface
-        }
+        thumbColor={value ? COLORS.accent : COLORS.surface}
       />
     </View>
   );
 }
-
 
 // ======================================================
 // STYLES

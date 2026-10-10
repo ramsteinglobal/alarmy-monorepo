@@ -39,23 +39,16 @@ export const getAlarms = async (): Promise<StoredAlarm[]> => {
 };
 
 // Save complete alarm list
-export const saveAlarms = async (
-  alarms: StoredAlarm[],
-): Promise<void> => {
+export const saveAlarms = async (alarms: StoredAlarm[]): Promise<void> => {
   try {
-    await AsyncStorage.setItem(
-      ALARM_STORAGE_KEY,
-      JSON.stringify(alarms),
-    );
+    await AsyncStorage.setItem(ALARM_STORAGE_KEY, JSON.stringify(alarms));
   } catch (error) {
     console.error('Error saving alarms:', error);
   }
 };
 
 // Add a new alarm
-export const addAlarm = async (
-  alarm: StoredAlarm,
-): Promise<void> => {
+export const addAlarm = async (alarm: StoredAlarm): Promise<void> => {
   try {
     const alarms = await getAlarms();
 
@@ -68,9 +61,7 @@ export const addAlarm = async (
 };
 
 // Update an existing alarm
-export const updateAlarm = async (
-  updatedAlarm: StoredAlarm,
-): Promise<void> => {
+export const updateAlarm = async (updatedAlarm: StoredAlarm): Promise<void> => {
   try {
     const alarms = await getAlarms();
 
@@ -85,15 +76,11 @@ export const updateAlarm = async (
 };
 
 // Delete an alarm
-export const deleteAlarm = async (
-  alarmId: string,
-): Promise<void> => {
+export const deleteAlarm = async (alarmId: string): Promise<void> => {
   try {
     const alarms = await getAlarms();
 
-    const filteredAlarms = alarms.filter(
-      alarm => alarm.id !== alarmId,
-    );
+    const filteredAlarms = alarms.filter(alarm => alarm.id !== alarmId);
 
     await saveAlarms(filteredAlarms);
   } catch (error) {

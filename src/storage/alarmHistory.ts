@@ -15,13 +15,9 @@ export type AlarmHistoryItem = {
 };
 
 // Get all alarm history
-export const getAlarmHistory = async (): Promise<
-  AlarmHistoryItem[]
-> => {
+export const getAlarmHistory = async (): Promise<AlarmHistoryItem[]> => {
   try {
-    const data = await AsyncStorage.getItem(
-      HISTORY_STORAGE_KEY,
-    );
+    const data = await AsyncStorage.getItem(HISTORY_STORAGE_KEY);
 
     if (!data) {
       return [];
@@ -29,36 +25,23 @@ export const getAlarmHistory = async (): Promise<
 
     return JSON.parse(data);
   } catch (error) {
-    console.error(
-      'Error loading alarm history:',
-      error,
-    );
+    console.error('Error loading alarm history:', error);
 
     return [];
   }
 };
 
 // Save complete history
-export const saveAlarmHistory = async (
-  history: AlarmHistoryItem[],
-): Promise<void> => {
+export const saveAlarmHistory = async (history: AlarmHistoryItem[]): Promise<void> => {
   try {
-    await AsyncStorage.setItem(
-      HISTORY_STORAGE_KEY,
-      JSON.stringify(history),
-    );
+    await AsyncStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
   } catch (error) {
-    console.error(
-      'Error saving alarm history:',
-      error,
-    );
+    console.error('Error saving alarm history:', error);
   }
 };
 
 // Add one history record
-export const addAlarmHistory = async (
-  item: AlarmHistoryItem,
-): Promise<void> => {
+export const addAlarmHistory = async (item: AlarmHistoryItem): Promise<void> => {
   try {
     const history = await getAlarmHistory();
 
@@ -66,23 +49,15 @@ export const addAlarmHistory = async (
 
     await saveAlarmHistory(history);
   } catch (error) {
-    console.error(
-      'Error adding alarm history:',
-      error,
-    );
+    console.error('Error adding alarm history:', error);
   }
 };
 
 // Clear history
 export const clearAlarmHistory = async (): Promise<void> => {
   try {
-    await AsyncStorage.removeItem(
-      HISTORY_STORAGE_KEY,
-    );
+    await AsyncStorage.removeItem(HISTORY_STORAGE_KEY);
   } catch (error) {
-    console.error(
-      'Error clearing alarm history:',
-      error,
-    );
+    console.error('Error clearing alarm history:', error);
   }
 };

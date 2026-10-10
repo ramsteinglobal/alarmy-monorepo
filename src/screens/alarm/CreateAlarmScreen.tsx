@@ -93,7 +93,8 @@ export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProp
                   accessibilityRole="radio"
                   accessibilityState={{ selected: period === p }}
                   onPress={() => setPeriod(p)}
-                  style={[styles.periodButton, period === p && styles.periodSelected]}>
+                  style={[styles.periodButton, period === p && styles.periodSelected]}
+                >
                   <Text style={[styles.periodText, period === p && styles.periodSelectedText]}>
                     {p}
                   </Text>
@@ -118,8 +119,11 @@ export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProp
                   accessibilityLabel={day.name}
                   accessibilityState={{ checked: selected }}
                   onPress={() => toggleDay(day.id)}
-                  style={[styles.dayButton, selected && styles.daySelected]}>
-                  <Text style={[styles.dayText, selected && styles.daySelectedText]}>{day.label}</Text>
+                  style={[styles.dayButton, selected && styles.daySelected]}
+                >
+                  <Text style={[styles.dayText, selected && styles.daySelectedText]}>
+                    {day.label}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -185,7 +189,12 @@ const styles = StyleSheet.create({
   dayText: { fontSize: FONT.body, fontWeight: '700', color: COLORS.muted },
   daySelectedText: { color: COLORS.onAccent },
   preview: { marginTop: SPACING.lg, alignItems: 'center', backgroundColor: COLORS.card },
-  previewLabel: { fontSize: FONT.caption, fontWeight: '700', letterSpacing: 1.5, color: COLORS.muted },
+  previewLabel: {
+    fontSize: FONT.caption,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    color: COLORS.muted,
+  },
   previewRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 6 },
   previewTime: { fontSize: 40, fontWeight: '700', color: COLORS.text },
   previewPeriod: { marginLeft: 6, fontSize: FONT.title, fontWeight: '700', color: COLORS.accent },

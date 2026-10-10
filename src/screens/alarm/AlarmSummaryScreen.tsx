@@ -65,8 +65,12 @@ export default function AlarmSummaryScreen({
   };
 
   const buttonLabel = saving
-    ? isEditing ? 'Updating Alarm...' : 'Saving Alarm...'
-    : isEditing ? 'Update Alarm →' : 'Save Alarm →';
+    ? isEditing
+      ? 'Updating Alarm...'
+      : 'Saving Alarm...'
+    : isEditing
+    ? 'Update Alarm →'
+    : 'Save Alarm →';
 
   return (
     <Screen>
@@ -81,7 +85,8 @@ export default function AlarmSummaryScreen({
           <Text style={styles.cardLabel}>ALARM TIME</Text>
           <Text
             style={styles.time}
-            accessibilityLabel={`${draft.hour}:${minute} ${draft.period}, ${daysText}`}>
+            accessibilityLabel={`${draft.hour}:${minute} ${draft.period}, ${daysText}`}
+          >
             {draft.hour}:{minute}
             <Text style={styles.period}> {draft.period}</Text>
           </Text>
@@ -89,8 +94,18 @@ export default function AlarmSummaryScreen({
         </Card>
 
         <Card style={styles.detailsCard}>
-          <InfoRow icon={soundIcon} label="ALARM SOUND" value={sound.name} description={sound.description} />
-          <InfoRow icon={missionIcon} label="WAKE-UP MISSION" value={mission.title} description={mission.description} />
+          <InfoRow
+            icon={soundIcon}
+            label="ALARM SOUND"
+            value={sound.name}
+            description={sound.description}
+          />
+          <InfoRow
+            icon={missionIcon}
+            label="WAKE-UP MISSION"
+            value={mission.title}
+            description={mission.description}
+          />
         </Card>
 
         <Card style={styles.statusCard}>
@@ -109,7 +124,12 @@ export default function AlarmSummaryScreen({
 
         <View style={styles.actions}>
           <PrimaryButton label={buttonLabel} variant="dark" loading={saving} onPress={handleSave} />
-          <PrimaryButton label="Back" variant="ghost" disabled={saving} onPress={navigation.goBack} />
+          <PrimaryButton
+            label="Back"
+            variant="ghost"
+            disabled={saving}
+            onPress={navigation.goBack}
+          />
         </View>
       </ScrollView>
     </Screen>

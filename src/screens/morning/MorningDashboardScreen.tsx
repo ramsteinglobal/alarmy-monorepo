@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { COLORS } from '../../theme';
@@ -45,23 +39,15 @@ const MorningDashboardScreen = () => {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.container}>
-
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerSmall}>
-              GOOD MORNING
-            </Text>
+            <Text style={styles.headerSmall}>GOOD MORNING</Text>
 
-            <Text style={styles.headerTitle}>
-              Morning
-            </Text>
+            <Text style={styles.headerTitle}>Morning</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.menuButton}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.menuButton} activeOpacity={0.7}>
             <Text style={styles.menuText}>⋮</Text>
           </TouchableOpacity>
         </View>
@@ -70,110 +56,74 @@ const MorningDashboardScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-
           {/* Greeting Card */}
           <View style={styles.greetingCard}>
             <View style={styles.greetingIcon}>
-              <Text style={styles.greetingIconText}>
-                ☀
-              </Text>
+              <Text style={styles.greetingIconText}>☀</Text>
             </View>
 
             <View style={styles.greetingContent}>
-              <Text style={styles.greetingTitle}>
-                Good morning!
-              </Text>
+              <Text style={styles.greetingTitle}>Good morning!</Text>
 
               <Text style={styles.greetingText}>
-                You completed your alarm. Great start
-                to the day.
+                You completed your alarm. Great start to the day.
               </Text>
             </View>
           </View>
 
           {/* Wake-up Summary */}
-          <Text style={styles.sectionTitle}>
-            Today's Wake-Up
-          </Text>
+          <Text style={styles.sectionTitle}>Today's Wake-Up</Text>
 
           <View style={styles.summaryCard}>
-
             <View style={styles.summaryMain}>
               <Text style={styles.summaryTime}>
                 7:52
-                <Text style={styles.summaryPeriod}>
-                  {' '}AM
-                </Text>
+                <Text style={styles.summaryPeriod}> AM</Text>
               </Text>
 
               <View style={styles.completedBadge}>
-                <Text style={styles.completedBadgeText}>
-                  ✓ COMPLETED
-                </Text>
+                <Text style={styles.completedBadgeText}>✓ COMPLETED</Text>
               </View>
             </View>
 
             <View style={styles.divider} />
 
             <View style={styles.summaryDetails}>
-
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>
-                  MISSION
-                </Text>
+                <Text style={styles.summaryLabel}>MISSION</Text>
 
-                <Text style={styles.summaryValue}>
-                  Math Mission
-                </Text>
+                <Text style={styles.summaryValue}>Math Mission</Text>
               </View>
 
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>
-                  RESULT
-                </Text>
+                <Text style={styles.summaryLabel}>RESULT</Text>
 
-                <Text style={styles.summaryValue}>
-                  Successful
-                </Text>
+                <Text style={styles.summaryValue}>Successful</Text>
               </View>
 
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>
-                  STREAK
-                </Text>
+                <Text style={styles.summaryLabel}>STREAK</Text>
 
-                <Text style={styles.summaryValue}>
-                  5 days
-                </Text>
+                <Text style={styles.summaryValue}>5 days</Text>
               </View>
-
             </View>
           </View>
 
           {/* Morning Score */}
-          <Text style={styles.sectionTitle}>
-            Morning Score
-          </Text>
+          <Text style={styles.sectionTitle}>Morning Score</Text>
 
           <View style={styles.scoreCard}>
             <View style={styles.scoreCircle}>
-              <Text style={styles.scoreNumber}>
-                82
-              </Text>
+              <Text style={styles.scoreNumber}>82</Text>
 
-              <Text style={styles.scoreOutOf}>
-                /100
-              </Text>
+              <Text style={styles.scoreOutOf}>/100</Text>
             </View>
 
             <View style={styles.scoreContent}>
-              <Text style={styles.scoreTitle}>
-                Great start!
-              </Text>
+              <Text style={styles.scoreTitle}>Great start!</Text>
 
               <Text style={styles.scoreDescription}>
-                You're building a consistent morning
-                routine.
+                You're building a consistent morning routine.
               </Text>
 
               <View style={styles.scoreProgressBackground}>
@@ -184,68 +134,35 @@ const MorningDashboardScreen = () => {
 
           {/* Morning Routine */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionHeaderTitle}>
-              Morning Routine
-            </Text>
+            <Text style={styles.sectionHeaderTitle}>Morning Routine</Text>
 
-            <Text style={styles.routineCount}>
-              1 / 4
-            </Text>
+            <Text style={styles.routineCount}>1 / 4</Text>
           </View>
 
           <View style={styles.habitsCard}>
             {habits.map((habit, index) => (
               <React.Fragment key={habit.id}>
-                <TouchableOpacity
-                  style={styles.habitRow}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    style={[
-                      styles.habitIcon,
-                      habit.completed &&
-                        styles.habitIconCompleted,
-                    ]}
-                  >
-                    <Text style={styles.habitIconText}>
-                      {habit.icon}
-                    </Text>
+                <TouchableOpacity style={styles.habitRow} activeOpacity={0.7}>
+                  <View style={[styles.habitIcon, habit.completed && styles.habitIconCompleted]}>
+                    <Text style={styles.habitIconText}>{habit.icon}</Text>
                   </View>
 
                   <View style={styles.habitContent}>
                     <Text
-                      style={[
-                        styles.habitTitle,
-                        habit.completed &&
-                          styles.habitTitleCompleted,
-                      ]}
+                      style={[styles.habitTitle, habit.completed && styles.habitTitleCompleted]}
                     >
                       {habit.title}
                     </Text>
 
-                    <Text style={styles.habitDescription}>
-                      {habit.description}
-                    </Text>
+                    <Text style={styles.habitDescription}>{habit.description}</Text>
                   </View>
 
-                  <View
-                    style={[
-                      styles.checkbox,
-                      habit.completed &&
-                        styles.checkboxCompleted,
-                    ]}
-                  >
-                    {habit.completed && (
-                      <Text style={styles.checkmark}>
-                        ✓
-                      </Text>
-                    )}
+                  <View style={[styles.checkbox, habit.completed && styles.checkboxCompleted]}>
+                    {habit.completed && <Text style={styles.checkmark}>✓</Text>}
                   </View>
                 </TouchableOpacity>
 
-                {index < habits.length - 1 && (
-                  <View style={styles.habitDivider} />
-                )}
+                {index < habits.length - 1 && <View style={styles.habitDivider} />}
               </React.Fragment>
             ))}
           </View>
@@ -253,42 +170,31 @@ const MorningDashboardScreen = () => {
           {/* Streak */}
           <View style={styles.streakCard}>
             <View style={styles.streakIcon}>
-              <Text style={styles.streakIconText}>
-                🔥
-              </Text>
+              <Text style={styles.streakIconText}>🔥</Text>
             </View>
 
             <View style={styles.streakContent}>
-              <Text style={styles.streakTitle}>
-                5 Day Wake-Up Streak
-              </Text>
+              <Text style={styles.streakTitle}>5 Day Wake-Up Streak</Text>
 
               <Text style={styles.streakDescription}>
-                Keep going! You're creating a healthy
-                habit.
+                Keep going! You're creating a healthy habit.
               </Text>
             </View>
 
-            <Text style={styles.streakArrow}>
-              ›
-            </Text>
+            <Text style={styles.streakArrow}>›</Text>
           </View>
 
           {/* Tip */}
           <View style={styles.tipCard}>
-            <Text style={styles.tipLabel}>
-              MORNING TIP
-            </Text>
+            <Text style={styles.tipLabel}>MORNING TIP</Text>
 
             <Text style={styles.tipText}>
-              Avoid checking your phone immediately
-              after waking up. Give yourself a few
-              minutes to start your day calmly.
+              Avoid checking your phone immediately after waking up. Give yourself a few minutes to
+              start your day calmly.
             </Text>
           </View>
 
           <View style={styles.bottomSpace} />
-
         </ScrollView>
       </View>
     </SafeAreaView>

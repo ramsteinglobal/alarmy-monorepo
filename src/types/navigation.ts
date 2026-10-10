@@ -1,4 +1,3 @@
-
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { StoredAlarm } from '../storage/alarmStorage';
@@ -42,11 +41,15 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
 };
 
-export type AlarmScreenProps<T extends keyof AlarmStackParamList> =
-  NativeStackScreenProps<AlarmStackParamList, T>;
+export type AlarmScreenProps<T extends keyof AlarmStackParamList> = NativeStackScreenProps<
+  AlarmStackParamList,
+  T
+>;
 
-export type RootScreenProps<T extends keyof RootStackParamList> =
-  NativeStackScreenProps<RootStackParamList, T>;
+export type RootScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<
+  RootStackParamList,
+  T
+>;
 
 // React Navigation requires this global namespace augmentation.
 declare global {

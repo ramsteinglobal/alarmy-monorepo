@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {COLORS} from '../../theme';
+import { COLORS } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
 
 type Props = RootScreenProps<'Login'>;
@@ -36,11 +36,11 @@ export default function LoginScreen({ navigation }: Props) {
           </Text>
 
           <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialText}>G  Continue with Google</Text>
+            <Text style={styles.socialText}>G Continue with Google</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialText}>●  Continue with Apple</Text>
+            <Text style={styles.socialText}>● Continue with Apple</Text>
           </TouchableOpacity>
 
           <Text style={styles.or}>OR EMAIL</Text>
@@ -72,19 +72,13 @@ export default function LoginScreen({ navigation }: Props) {
             onChangeText={setPassword}
           />
 
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => navigation.replace('Main')}
-          >
-            <Text style={styles.primaryText}>Sign In to AlarmyApp  →</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.replace('Main')}>
+            <Text style={styles.primaryText}>Sign In to AlarmyApp →</Text>
           </TouchableOpacity>
 
           <Text style={styles.signupText}>
             Don't have an account?{' '}
-            <Text
-              style={styles.signupLink}
-              onPress={() => navigation.navigate('Signup')}
-            >
+            <Text style={styles.signupLink} onPress={() => navigation.navigate('Signup')}>
               Sign Up Free
             </Text>
           </Text>
