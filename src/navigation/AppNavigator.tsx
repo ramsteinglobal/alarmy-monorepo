@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -44,30 +43,15 @@ function AlarmNavigator() {
         headerShown: false,
       }}
     >
-      <AlarmStack.Screen
-        name="AlarmDashboard"
-        component={AlarmDashboard}
-      />
+      <AlarmStack.Screen name="AlarmDashboard" component={AlarmDashboard} />
 
-      <AlarmStack.Screen
-        name="CreateAlarm"
-        component={CreateAlarmScreen}
-      />
+      <AlarmStack.Screen name="CreateAlarm" component={CreateAlarmScreen} />
 
-      <AlarmStack.Screen
-        name="SelectSound"
-        component={SelectSoundScreen}
-      />
+      <AlarmStack.Screen name="SelectSound" component={SelectSoundScreen} />
 
-      <AlarmStack.Screen
-        name="SelectMission"
-        component={SelectMissionScreen}
-      />
+      <AlarmStack.Screen name="SelectMission" component={SelectMissionScreen} />
 
-      <AlarmStack.Screen
-        name="AlarmSummary"
-        component={AlarmSummaryScreen}
-      />
+      <AlarmStack.Screen name="AlarmSummary" component={AlarmSummaryScreen} />
 
       <AlarmStack.Screen
         name="AlarmRinging"
@@ -81,10 +65,7 @@ function AlarmNavigator() {
         options={{ gestureEnabled: false }}
       />
 
-      <AlarmStack.Screen
-        name="AlarmSuccess"
-        component={AlarmSuccessScreen}
-      />
+      <AlarmStack.Screen name="AlarmSuccess" component={AlarmSuccessScreen} />
     </AlarmStack.Navigator>
   );
 }

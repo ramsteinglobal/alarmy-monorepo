@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
 import { COLORS } from '../theme';
@@ -12,14 +11,7 @@ type Props = {
   enabled: boolean;
 };
 
-export default function AlarmCard({
-  time,
-  period,
-  days,
-  label,
-  mission,
-  enabled,
-}: Props) {
+export default function AlarmCard({ time, period, days, label, mission, enabled }: Props) {
   return (
     <View style={styles.card}>
       <View style={styles.top}>

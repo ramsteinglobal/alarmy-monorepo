@@ -1,4 +1,3 @@
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ALARM_STORAGE_KEY = '@alarmy_alarms';
@@ -64,9 +63,7 @@ export const addAlarm = async (alarm: StoredAlarm): Promise<void> => {
 };
 
 // Update an existing alarm
-export const updateAlarm = async (
-  updatedAlarm: StoredAlarm,
-): Promise<void> => {
+export const updateAlarm = async (updatedAlarm: StoredAlarm): Promise<void> => {
   try {
     const alarms = await getAlarms();
 
