@@ -4,6 +4,7 @@
     "project_id": "alamyapp",
     "storage_bucket": "alamyapp.firebasestorage.app"
   },
+  
   "client": [
     {
       "client_info": {

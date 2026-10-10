@@ -1,4 +1,6 @@
 import React, { useCallback, useState } from 'react';
+
+// checks
 import {
   Alert,
   RefreshControl,
