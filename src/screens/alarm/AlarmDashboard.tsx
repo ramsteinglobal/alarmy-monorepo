@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
-import { COLORS } from '../theme';
+import { COLORS } from '../../theme';
 
 type Props = {
   time: string;

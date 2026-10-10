@@ -9,17 +9,28 @@ const db = getFirestore();
 // Wake-up checks / push reminders go here (FCM) in milestone 2.
 export const nightlyAlarmCleanup = onSchedule('every day 03:00', async () => {
   const cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
-  const snap = await db.collection('alarms').where('enabled', '==', false).get();
-  const batch = db.batch();
   let count = 0;
-  snap.forEach(docSnap => {
-    const data = docSnap.data();
-    if (data.updatedAt && data.updatedAt < cutoff) {
-      batch.delete(docSnap.ref);
-      count += 1;
+
+  while (true) {
+    const snap = await db
+      .collection('alarms')
+      .where('enabled', '==', false)
+      .where('updatedAt', '<', cutoff)
+      .limit(500)
+      .get();
+
+    if (snap.empty) {
+      break;
     }
-  });
-  await batch.commit();
+
+    const batch = db.batch();
+    snap.docs.forEach(docSnap => {
+      batch.delete(docSnap.ref);
+    });
+    await batch.commit();
+    count += snap.size;
+  }
+
   // eslint-disable-next-line no-console
   console.log(`nightlyAlarmCleanup: deleted ${count} stale alarms`);
 });

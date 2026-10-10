@@ -9,7 +9,8 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Alarm } from '@alarme/shared-types';
+
+type Alarm = Record<string, any> & { id: string };
 
 const alarmsCollection = collection(db, 'alarms');
 
