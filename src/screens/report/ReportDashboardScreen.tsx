@@ -297,8 +297,8 @@ const ReportDashboardScreen = () => {
                   {loading
                     ? 'Loading progress...'
                     : history.length > 0
-                      ? 'Great progress!'
-                      : 'Start your journey'}
+                    ? 'Great progress!'
+                    : 'Start your journey'}
                 </Text>
               </View>
 

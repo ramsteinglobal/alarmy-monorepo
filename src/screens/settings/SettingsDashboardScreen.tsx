@@ -73,9 +73,9 @@ export default function SettingsDashboardScreen() {
                 savedProfile.provider === 'google'
                   ? 'Google'
                   : savedProfile.provider === 'password'
-                    ? 'Email and password'
-                    : (savedProfile.provider ??
-                      (providerId === 'google.com' ? 'Google' : 'Email and password')),
+                  ? 'Email and password'
+                  : savedProfile.provider ??
+                    (providerId === 'google.com' ? 'Google' : 'Email and password'),
             });
           }
         } catch {
@@ -150,7 +150,7 @@ export default function SettingsDashboardScreen() {
 
           <View style={styles.profileContent}>
             <Text style={styles.profileName}>
-              {profileLoading ? 'Loading profile…' : (profile?.fullName ?? 'Alarm User')}
+              {profileLoading ? 'Loading profile…' : profile?.fullName ?? 'Alarm User'}
             </Text>
 
             <Text style={styles.profileSubtitle}>
@@ -167,7 +167,7 @@ export default function SettingsDashboardScreen() {
             label="Sleep persona"
             value={
               profile?.sleepPersona
-                ? (personaLabels[profile.sleepPersona] ?? profile.sleepPersona)
+                ? personaLabels[profile.sleepPersona] ?? profile.sleepPersona
                 : 'Not set'
             }
           />

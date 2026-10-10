@@ -69,8 +69,8 @@ export default function AlarmSummaryScreen({
       ? 'Updating Alarm...'
       : 'Saving Alarm...'
     : isEditing
-      ? 'Update Alarm →'
-      : 'Save Alarm →';
+    ? 'Update Alarm →'
+    : 'Save Alarm →';
 
   return (
     <Screen>

@@ -209,14 +209,14 @@ const WeekDay = ({ day, hours, active = false }: WeekDayProps) => {
                   hours === '8.0'
                     ? 68
                     : hours === '7.8'
-                      ? 64
-                      : hours === '7.7'
-                        ? 62
-                        : hours === '7.5'
-                          ? 59
-                          : hours === '7.2'
-                            ? 55
-                            : 51,
+                    ? 64
+                    : hours === '7.7'
+                    ? 62
+                    : hours === '7.5'
+                    ? 59
+                    : hours === '7.2'
+                    ? 55
+                    : 51,
               },
             ]}
           />
