@@ -7,6 +7,14 @@
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "time", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "alarms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "enabled", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

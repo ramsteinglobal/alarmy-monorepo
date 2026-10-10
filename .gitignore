@@ -57,6 +57,11 @@ Desktop.ini
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea/
+
+# Android generated build artifacts
+/android/.gradle/
+/android/app/.cxx/
+
 *.swp
 *.swo
 *~
