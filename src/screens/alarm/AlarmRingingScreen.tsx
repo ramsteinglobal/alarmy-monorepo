@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import Card from '../../components/Card';
@@ -17,6 +17,11 @@ export default function AlarmRingingScreen({
   const alarm = route.params?.alarm;
   const [now, setNow] = useState(() => new Date());
 
+  // When the ringing screen mounts, the alarm starts demanding attention.
+  // This timestamp travels Ringing -> Mission -> Success so history records
+  // how long the wake-up actually took.
+  const ringingStartedAt = useRef(Date.now());
+
   // Live clock
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -33,7 +38,7 @@ export default function AlarmRingingScreen({
       Alert.alert('Alarm Error', 'Alarm information is missing.');
       return;
     }
-    navigation.navigate('MissionExecution', { alarm });
+    navigation.navigate('MissionExecution', { alarm, startedAt: ringingStartedAt.current });
   };
 
   // Development shortcut only. Remove once real scheduling is in place.
