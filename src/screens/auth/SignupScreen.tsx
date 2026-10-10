@@ -12,9 +12,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
-import { getAuthErrorMessage, signInWithGoogle, signUp, type SleepPersona } from '../../config/firebaseSetup';
+import {
+  getAuthErrorMessage,
+  signInWithGoogle,
+  signUp,
+  type SleepPersona,
+} from '../../config/firebaseSetup';
 
-const personas: {id: SleepPersona; title: string; subtitle: string; icon: string}[] = [
+const personas: { id: SleepPersona; title: string; subtitle: string; icon: string }[] = [
   {
     id: 'early',
     title: 'Early Bird',
@@ -100,20 +105,19 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <Text style={styles.title}>Create Account</Text>
 
-        <Text style={styles.subtitle}>
-          Start your journey to energizing morning routines
-        </Text>
+        <Text style={styles.subtitle}>Start your journey to energizing morning routines</Text>
 
         {/* Social Login */}
         <View style={styles.socialRow}>
-          <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignup} disabled={loading}>
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={handleGoogleSignup}
+            disabled={loading}
+          >
             <Text style={styles.googleIcon}>G</Text>
             <Text style={styles.socialText}>Google</Text>
           </TouchableOpacity>
@@ -183,9 +187,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
         {/* Password strength */}
         {passwordStrength !== '' && (
           <View style={styles.passwordStrengthRow}>
-            <Text style={styles.passwordStrengthLabel}>
-              Password strength
-            </Text>
+            <Text style={styles.passwordStrengthLabel}>Password strength</Text>
 
             <Text
               style={[
@@ -214,28 +216,18 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
             return (
               <TouchableOpacity
                 key={persona.id}
-                style={[
-                  styles.personaCard,
-                  selected && styles.personaCardSelected,
-                ]}
+                style={[styles.personaCard, selected && styles.personaCardSelected]}
                 onPress={() => setSelectedPersona(persona.id)}
                 activeOpacity={0.8}
                 disabled={loading}
               >
                 <Text style={styles.personaIcon}>{persona.icon}</Text>
 
-                <Text
-                  style={[
-                    styles.personaTitle,
-                    selected && styles.personaTitleSelected,
-                  ]}
-                >
+                <Text style={[styles.personaTitle, selected && styles.personaTitleSelected]}>
                   {persona.title}
                 </Text>
 
-                <Text style={styles.personaSubtitle}>
-                  {persona.subtitle}
-                </Text>
+                <Text style={styles.personaSubtitle}>{persona.subtitle}</Text>
               </TouchableOpacity>
             );
           })}
@@ -248,18 +240,11 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
           activeOpacity={0.8}
           disabled={loading}
         >
-          <View
-            style={[
-              styles.checkbox,
-              acceptedTerms && styles.checkboxSelected,
-            ]}
-          >
+          <View style={[styles.checkbox, acceptedTerms && styles.checkboxSelected]}>
             {acceptedTerms && <Text style={styles.check}>✓</Text>}
           </View>
 
-          <Text style={styles.termsText}>
-            I agree to Terms & Privacy Policy
-          </Text>
+          <Text style={styles.termsText}>I agree to Terms & Privacy Policy</Text>
         </TouchableOpacity>
 
         {/* Create Account */}
@@ -269,7 +254,9 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
           activeOpacity={0.8}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color={COLORS.text} /> : (
+          {loading ? (
+            <ActivityIndicator color={COLORS.text} />
+          ) : (
             <Text style={styles.primaryText}>Create Free Account →</Text>
           )}
         </TouchableOpacity>
@@ -277,11 +264,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
         {/* Sign In */}
         <Text style={styles.bottomText}>
           Already registered?{' '}
-          <Text
-            style={styles.signInLink}
-            onPress={() => navigation.goBack()}
-            disabled={loading}
-          >
+          <Text style={styles.signInLink} onPress={() => navigation.goBack()} disabled={loading}>
             Sign In
           </Text>
         </Text>

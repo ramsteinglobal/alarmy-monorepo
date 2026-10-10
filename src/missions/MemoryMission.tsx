@@ -45,11 +45,19 @@ export default function MemoryMission({ onComplete }: MissionProps) {
     <>
       <MissionCard
         label={phase === 'show' ? 'REMEMBER' : 'REPEAT THE SEQUENCE'}
-        hint={phase === 'show' ? 'It will disappear in a moment.' : `Tap ${LENGTH} symbols in order.`}>
+        hint={
+          phase === 'show' ? 'It will disappear in a moment.' : `Tap ${LENGTH} symbols in order.`
+        }
+      >
         <Text
-          accessibilityLabel={phase === 'show' ? `Sequence: ${sequence.join(' ')}` : 'Sequence hidden'}
-          style={styles.sequence}>
-          {phase === 'show' ? sequence.join('  ') : entered.concat(Array(LENGTH - entered.length).fill('·')).join('  ')}
+          accessibilityLabel={
+            phase === 'show' ? `Sequence: ${sequence.join(' ')}` : 'Sequence hidden'
+          }
+          style={styles.sequence}
+        >
+          {phase === 'show'
+            ? sequence.join('  ')
+            : entered.concat(Array(LENGTH - entered.length).fill('·')).join('  ')}
         </Text>
       </MissionCard>
 
@@ -58,7 +66,13 @@ export default function MemoryMission({ onComplete }: MissionProps) {
       {phase === 'recall' ? (
         <View style={styles.pad}>
           {SYMBOLS.map(s => (
-            <TouchableOpacity key={s} accessibilityRole="button" accessibilityLabel={`Symbol ${s}`} style={styles.key} onPress={() => press(s)}>
+            <TouchableOpacity
+              key={s}
+              accessibilityRole="button"
+              accessibilityLabel={`Symbol ${s}`}
+              style={styles.key}
+              onPress={() => press(s)}
+            >
               <Text style={styles.keyText}>{s}</Text>
             </TouchableOpacity>
           ))}
@@ -70,7 +84,13 @@ export default function MemoryMission({ onComplete }: MissionProps) {
 
 const styles = StyleSheet.create({
   sequence: { fontSize: 40, letterSpacing: 4, color: COLORS.accent, marginTop: 10 },
-  pad: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, marginTop: 20 },
+  pad: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginTop: 20,
+  },
   key: {
     width: '30%',
     minHeight: 64,

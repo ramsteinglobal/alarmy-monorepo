@@ -3,7 +3,13 @@ import { StyleSheet, Text } from 'react-native';
 import { COLORS, FONT, SPACING } from '../theme';
 import Card from '../components/Card';
 
-type Props = { label?: string; icon?: string; title?: string; children?: React.ReactNode; hint?: string };
+type Props = {
+  label?: string;
+  icon?: string;
+  title?: string;
+  children?: React.ReactNode;
+  hint?: string;
+};
 
 /** Shared "prompt" card at the top of every mission. */
 export default function MissionCard({ label, icon, title, children, hint }: Props) {

@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {COLORS} from '../../theme';
+import { COLORS } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
 import { getAuthErrorMessage, signIn, signInWithGoogle } from '../../config/firebaseSetup';
 
@@ -72,12 +72,16 @@ export default function LoginScreen({ navigation }: Props) {
             Neutralize sleep inertia with smart circadian wake-up routines
           </Text>
 
-          <TouchableOpacity style={styles.socialButton} onPress={handleGoogleSignIn} disabled={loading}>
-            <Text style={styles.socialText}>G  Continue with Google</Text>
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+          >
+            <Text style={styles.socialText}>G Continue with Google</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialText}>●  Continue with Apple</Text>
+            <Text style={styles.socialText}>● Continue with Apple</Text>
           </TouchableOpacity>
 
           <Text style={styles.or}>OR EMAIL</Text>
@@ -115,22 +119,17 @@ export default function LoginScreen({ navigation }: Props) {
             textContentType="password"
           />
 
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleSignIn}
-            disabled={loading}
-          >
-            {loading ? <ActivityIndicator color={COLORS.text} /> : (
-              <Text style={styles.primaryText}>Sign In to AlarmyApp  →</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleSignIn} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color={COLORS.text} />
+            ) : (
+              <Text style={styles.primaryText}>Sign In to AlarmyApp →</Text>
             )}
           </TouchableOpacity>
 
           <Text style={styles.signupText}>
             Don't have an account?{' '}
-            <Text
-              style={styles.signupLink}
-              onPress={() => navigation.navigate('Signup')}
-            >
+            <Text style={styles.signupLink} onPress={() => navigation.navigate('Signup')}>
               Sign Up Free
             </Text>
           </Text>

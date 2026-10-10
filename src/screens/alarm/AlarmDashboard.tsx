@@ -79,17 +79,21 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-        contentContainerStyle={styles.content}>
+        contentContainerStyle={styles.content}
+      >
         <View style={styles.header}>
           <View>
             <Text style={styles.headerSmall}>ALL / ACTIVE</Text>
-            <Text accessibilityRole="header" style={styles.headerTitle}>Alarm</Text>
+            <Text accessibilityRole="header" style={styles.headerTitle}>
+              Alarm
+            </Text>
           </View>
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel="Refresh alarms"
             style={styles.menuButton}
-            onPress={handleRefresh}>
+            onPress={handleRefresh}
+          >
             <Text style={styles.menuText}>•••</Text>
           </TouchableOpacity>
         </View>
@@ -116,7 +120,9 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
               </View>
               <View style={styles.nextInfo}>
                 <Text style={styles.nextDays}>{nextAlarm.days}</Text>
-                <Text style={styles.nextMission}>{nextAlarm.mission?.title ?? 'Wake-up Mission'}</Text>
+                <Text style={styles.nextMission}>
+                  {nextAlarm.mission?.title ?? 'Wake-up Mission'}
+                </Text>
               </View>
             </View>
           ) : (
@@ -139,7 +145,10 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
               Create your first alarm and build your wake-up routine.
             </Text>
             <View style={styles.emptyButton}>
-              <PrimaryButton label="CREATE ALARM" onPress={() => navigation.navigate('CreateAlarm')} />
+              <PrimaryButton
+                label="CREATE ALARM"
+                onPress={() => navigation.navigate('CreateAlarm')}
+              />
             </View>
           </Card>
         ) : (
@@ -150,7 +159,9 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
               onToggle={enabled => handleToggle(alarm, enabled)}
               onEdit={() => navigation.navigate('CreateAlarm', { editAlarm: alarm })}
               onDelete={() => handleDelete(alarm)}
-              onTestRing={__DEV__ ? () => navigation.navigate('AlarmRinging', { alarm }) : undefined}
+              onTestRing={
+                __DEV__ ? () => navigation.navigate('AlarmRinging', { alarm }) : undefined
+              }
             />
           ))
         )}
@@ -163,7 +174,8 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
         accessibilityLabel="Create new alarm"
         activeOpacity={0.85}
         style={styles.fab}
-        onPress={() => navigation.navigate('CreateAlarm')}>
+        onPress={() => navigation.navigate('CreateAlarm')}
+      >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
     </Screen>
@@ -174,15 +186,34 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: SPACING.sm },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  headerSmall: { fontSize: FONT.caption, fontWeight: '700', letterSpacing: 1.5, color: COLORS.muted },
+  headerSmall: {
+    fontSize: FONT.caption,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    color: COLORS.muted,
+  },
   headerTitle: { fontSize: 32, fontWeight: '700', color: COLORS.text },
-  menuButton: { width: TOUCH_MIN, height: TOUCH_MIN, alignItems: 'center', justifyContent: 'center' },
+  menuButton: {
+    width: TOUCH_MIN,
+    height: TOUCH_MIN,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   menuText: { fontSize: FONT.title, color: COLORS.muted },
-  greeting: { marginTop: SPACING.md, backgroundColor: COLORS.accentSoft, borderColor: COLORS.accentTint },
+  greeting: {
+    marginTop: SPACING.md,
+    backgroundColor: COLORS.accentSoft,
+    borderColor: COLORS.accentTint,
+  },
   greetingRow: { flexDirection: 'row', alignItems: 'center' },
   greetingIcon: {
-    width: 44, height: 44, borderRadius: 22, marginRight: 12,
-    backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: 12,
+    backgroundColor: COLORS.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   greetingIconText: { fontSize: FONT.title, color: COLORS.onAccent },
   greetingTitle: { fontSize: FONT.bodyLg, fontWeight: '700', color: COLORS.text },
@@ -196,21 +227,49 @@ const styles = StyleSheet.create({
   nextDays: { fontSize: FONT.body, color: COLORS.muted },
   nextMission: { marginTop: 2, fontSize: FONT.bodyLg, fontWeight: '700', color: COLORS.text },
   noNext: { marginTop: SPACING.sm, fontSize: FONT.bodyLg, color: COLORS.muted },
-  listHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: SPACING.lg, marginBottom: SPACING.sm },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.sm,
+  },
   listTitle: { fontSize: FONT.title, fontWeight: '700', color: COLORS.text },
   count: { fontSize: FONT.body, fontWeight: '700', color: COLORS.muted },
   empty: { alignItems: 'center', paddingVertical: SPACING.xl },
-  emptyIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: COLORS.accentTint, alignItems: 'center', justifyContent: 'center' },
+  emptyIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.accentTint,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   emptyIconText: { fontSize: 28, color: COLORS.accent },
-  emptyTitle: { marginTop: SPACING.md, fontSize: FONT.title, fontWeight: '700', color: COLORS.text },
+  emptyTitle: {
+    marginTop: SPACING.md,
+    fontSize: FONT.title,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
   emptyText: { marginTop: 4, fontSize: FONT.body, textAlign: 'center', color: COLORS.muted },
   emptyButton: { alignSelf: 'stretch', marginTop: SPACING.lg },
   bottomSpace: { height: 90 },
   fab: {
-    position: 'absolute', right: 20, bottom: 20,
-    width: 58, height: 58, borderRadius: 29,
-    backgroundColor: COLORS.accent, alignItems: 'center', justifyContent: 'center',
-    elevation: 4, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: COLORS.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
   },
   fabText: { fontSize: 30, lineHeight: 34, color: COLORS.onAccent, fontWeight: '700' },
 });

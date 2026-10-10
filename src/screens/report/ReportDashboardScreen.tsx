@@ -1,21 +1,12 @@
 import React, { useCallback, useState } from 'react';
 
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useFocusEffect } from '@react-navigation/native';
 
 import { COLORS } from '../../theme';
-import {
-  AlarmHistoryItem,
-  getAlarmHistory,
-} from '../../storage/alarmHistory';
+import { AlarmHistoryItem, getAlarmHistory } from '../../storage/alarmHistory';
 
 type WeekData = {
   day: string;
@@ -57,9 +48,9 @@ const ReportDashboardScreen = () => {
   // ============================================================
 
   const getDateKey = (date: Date) => {
-    return `${date.getFullYear()}-${String(
-      date.getMonth() + 1,
-    ).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+      date.getDate(),
+    ).padStart(2, '0')}`;
   };
 
   const isWithinLast7Days = (dateString: string) => {
@@ -71,20 +62,11 @@ const ReportDashboardScreen = () => {
 
     const now = new Date();
 
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const target = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-    );
+    const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-    const difference =
-      today.getTime() - target.getTime();
+    const difference = today.getTime() - target.getTime();
 
     const days = difference / (1000 * 60 * 60 * 24);
 
@@ -101,11 +83,7 @@ const ReportDashboardScreen = () => {
     const days: WeekData[] = [];
 
     for (let i = 6; i >= 0; i--) {
-      const date = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate() - i,
-      );
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
 
       const dateKey = getDateKey(date);
 
@@ -152,13 +130,9 @@ const ReportDashboardScreen = () => {
   // WEEKLY HISTORY
   // ============================================================
 
-  const weeklyHistory = history.filter(item =>
-    isWithinLast7Days(item.completedAt),
-  );
+  const weeklyHistory = history.filter(item => isWithinLast7Days(item.completedAt));
 
-  const completedAlarms = weeklyHistory.filter(
-    item => item.completed,
-  ).length;
+  const completedAlarms = weeklyHistory.filter(item => item.completed).length;
 
   /*
    * There is no failed-alarm record in the current
@@ -168,9 +142,7 @@ const ReportDashboardScreen = () => {
   const missionSuccess =
     weeklyHistory.length > 0
       ? Math.round(
-          (weeklyHistory.filter(item => item.completed).length /
-            weeklyHistory.length) *
-            100,
+          (weeklyHistory.filter(item => item.completed).length / weeklyHistory.length) * 100,
         )
       : 0;
 
@@ -206,11 +178,7 @@ const ReportDashboardScreen = () => {
      * Start from today.
      * If there is no completion today, check from yesterday.
      */
-    let checkDate = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-    );
+    let checkDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
     if (!completedDates.has(getDateKey(checkDate))) {
       checkDate.setDate(checkDate.getDate() - 1);
@@ -219,9 +187,7 @@ const ReportDashboardScreen = () => {
     while (completedDates.has(getDateKey(checkDate))) {
       streak += 1;
 
-      checkDate.setDate(
-        checkDate.getDate() - 1,
-      );
+      checkDate.setDate(checkDate.getDate() - 1);
     }
 
     return streak;
@@ -234,20 +200,13 @@ const ReportDashboardScreen = () => {
   // ============================================================
 
   const getMissionStats = (missionId: string) => {
-    const missionHistory = weeklyHistory.filter(
-      item => item.missionId === missionId,
-    );
+    const missionHistory = weeklyHistory.filter(item => item.missionId === missionId);
 
-    const completed = missionHistory.filter(
-      item => item.completed,
-    ).length;
+    const completed = missionHistory.filter(item => item.completed).length;
 
     const total = missionHistory.length;
 
-    const percentage =
-      total > 0
-        ? Math.round((completed / total) * 100)
-        : 0;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
     return {
       completed,
@@ -264,14 +223,9 @@ const ReportDashboardScreen = () => {
   // OVERALL CONSISTENCY
   // ============================================================
 
-  const completedDays = weekData.filter(
-    item => item.value > 0,
-  ).length;
+  const completedDays = weekData.filter(item => item.value > 0).length;
 
-  const weeklyConsistency =
-    completedDays > 0
-      ? Math.round((completedDays / 7) * 100)
-      : 0;
+  const weeklyConsistency = completedDays > 0 ? Math.round((completedDays / 7) * 100) : 0;
 
   // ============================================================
   // INSIGHT
@@ -281,31 +235,27 @@ const ReportDashboardScreen = () => {
     if (history.length === 0) {
       return {
         title: 'Start building your wake-up routine.',
-        text:
-          'Complete your first alarm mission and your progress will appear here.',
+        text: 'Complete your first alarm mission and your progress will appear here.',
       };
     }
 
     if (currentStreak >= 5) {
       return {
         title: 'You are building a strong routine.',
-        text:
-          `You have successfully completed alarms for ${currentStreak} consecutive days. Keep going!`,
+        text: `You have successfully completed alarms for ${currentStreak} consecutive days. Keep going!`,
       };
     }
 
     if (completedAlarms > 0) {
       return {
         title: 'Good progress!',
-        text:
-          'Keep completing your wake-up missions to build a consistent routine.',
+        text: 'Keep completing your wake-up missions to build a consistent routine.',
       };
     }
 
     return {
       title: 'Keep working on consistency.',
-      text:
-        'Complete your scheduled missions to improve your wake-up routine.',
+      text: 'Complete your scheduled missions to improve your wake-up routine.',
     };
   };
 
@@ -318,60 +268,42 @@ const ReportDashboardScreen = () => {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.container}>
-
         {/* Header */}
 
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerSmall}>
-              YOUR PROGRESS
-            </Text>
+            <Text style={styles.headerSmall}>YOUR PROGRESS</Text>
 
-            <Text style={styles.headerTitle}>
-              Report
-            </Text>
+            <Text style={styles.headerTitle}>Report</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.menuButton}
-            activeOpacity={0.7}
-            onPress={loadHistory}
-          >
-            <Text style={styles.menuText}>
-              ⋮
-            </Text>
+          <TouchableOpacity style={styles.menuButton} activeOpacity={0.7} onPress={loadHistory}>
+            <Text style={styles.menuText}>⋮</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={
-            styles.scrollContent
-          }
+          contentContainerStyle={styles.scrollContent}
         >
-
           {/* Weekly Overview */}
 
           <View style={styles.overviewCard}>
             <View style={styles.overviewHeader}>
               <View>
-                <Text style={styles.overviewLabel}>
-                  THIS WEEK
-                </Text>
+                <Text style={styles.overviewLabel}>THIS WEEK</Text>
 
                 <Text style={styles.overviewTitle}>
                   {loading
                     ? 'Loading progress...'
                     : history.length > 0
-                    ? 'Great progress!'
-                    : 'Start your journey'}
+                      ? 'Great progress!'
+                      : 'Start your journey'}
                 </Text>
               </View>
 
               <View style={styles.scoreBadge}>
-                <Text style={styles.scoreBadgeText}>
-                  {weeklyConsistency}%
-                </Text>
+                <Text style={styles.scoreBadgeText}>{weeklyConsistency}%</Text>
               </View>
             </View>
 
@@ -395,95 +327,54 @@ const ReportDashboardScreen = () => {
 
           {/* Key Stats */}
 
-          <Text style={styles.sectionTitle}>
-            Weekly Stats
-          </Text>
+          <Text style={styles.sectionTitle}>Weekly Stats</Text>
 
           <View style={styles.statsGrid}>
+            <StatCard icon="◷" value="7h 32m" label="Avg. Sleep" />
 
-            <StatCard
-              icon="◷"
-              value="7h 32m"
-              label="Avg. Sleep"
-            />
+            <StatCard icon="✓" value={`${completedAlarms} / 7`} label="Alarms Completed" />
 
-            <StatCard
-              icon="✓"
-              value={`${completedAlarms} / 7`}
-              label="Alarms Completed"
-            />
+            <StatCard icon="🔥" value={`${currentStreak} days`} label="Current Streak" />
 
-            <StatCard
-              icon="🔥"
-              value={`${currentStreak} days`}
-              label="Current Streak"
-            />
-
-            <StatCard
-              icon="◎"
-              value={`${missionSuccess}%`}
-              label="Mission Success"
-            />
-
+            <StatCard icon="◎" value={`${missionSuccess}%`} label="Mission Success" />
           </View>
 
           {/* Wake-up Consistency */}
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionHeaderTitle}>
-              Wake-Up Consistency
-            </Text>
+            <Text style={styles.sectionHeaderTitle}>Wake-Up Consistency</Text>
 
-            <Text style={styles.sectionAction}>
-              This week
-            </Text>
+            <Text style={styles.sectionAction}>This week</Text>
           </View>
 
           <View style={styles.chartCard}>
-
             <View style={styles.chartTop}>
               <View>
-                <Text style={styles.chartValue}>
-                  {weeklyConsistency}%
-                </Text>
+                <Text style={styles.chartValue}>{weeklyConsistency}%</Text>
 
-                <Text style={styles.chartDescription}>
-                  Average consistency
-                </Text>
+                <Text style={styles.chartDescription}>Average consistency</Text>
               </View>
 
-              <Text style={styles.chartTrend}>
-                {weeklyConsistency > 0
-                  ? 'Active'
-                  : '--'}
-              </Text>
+              <Text style={styles.chartTrend}>{weeklyConsistency > 0 ? 'Active' : '--'}</Text>
             </View>
 
             <View style={styles.chart}>
               {weekData.map((item, index) => (
-                <View
-                  key={`${item.day}-${index}`}
-                  style={styles.chartColumn}
-                >
-                  <View
-                    style={styles.chartBarArea}
-                  >
+                <View key={`${item.day}-${index}`} style={styles.chartColumn}>
+                  <View style={styles.chartBarArea}>
                     {item.value > 0 && (
                       <View
                         style={[
                           styles.chartBar,
                           {
-                            height:
-                              item.height,
+                            height: item.height,
                           },
                         ]}
                       />
                     )}
                   </View>
 
-                  <Text style={styles.chartDay}>
-                    {item.day}
-                  </Text>
+                  <Text style={styles.chartDay}>{item.day}</Text>
                 </View>
               ))}
             </View>
@@ -492,64 +383,41 @@ const ReportDashboardScreen = () => {
           {/* Sleep Overview */}
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionHeaderTitle}>
-              Sleep Overview
-            </Text>
+            <Text style={styles.sectionHeaderTitle}>Sleep Overview</Text>
 
-            <Text style={styles.sectionAction}>
-              7 days
-            </Text>
+            <Text style={styles.sectionAction}>7 days</Text>
           </View>
 
           <View style={styles.sleepCard}>
-
             <View style={styles.sleepMain}>
-              <Text style={styles.sleepDuration}>
-                7h 32m
-              </Text>
+              <Text style={styles.sleepDuration}>7h 32m</Text>
 
-              <Text style={styles.sleepSubtitle}>
-                average sleep duration
-              </Text>
+              <Text style={styles.sleepSubtitle}>average sleep duration</Text>
             </View>
 
             <View style={styles.sleepGoal}>
               <View style={styles.sleepGoalCircle}>
-                <Text style={styles.sleepGoalNumber}>
-                  94
-                </Text>
+                <Text style={styles.sleepGoalNumber}>94</Text>
               </View>
 
               <View>
-                <Text style={styles.sleepGoalTitle}>
-                  Goal progress
-                </Text>
+                <Text style={styles.sleepGoalTitle}>Goal progress</Text>
 
-                <Text style={styles.sleepGoalText}>
-                  94% of 8h target
-                </Text>
+                <Text style={styles.sleepGoalText}>94% of 8h target</Text>
               </View>
             </View>
-
           </View>
 
           {/* Mission Performance */}
 
-          <Text style={styles.sectionTitle}>
-            Mission Performance
-          </Text>
+          <Text style={styles.sectionTitle}>Mission Performance</Text>
 
           <View style={styles.missionCard}>
-
             <MissionRow
               icon="➗"
               name="Math Mission"
-              completed={String(
-                mathStats.completed,
-              )}
-              total={String(
-                mathStats.total,
-              )}
+              completed={String(mathStats.completed)}
+              total={String(mathStats.total)}
               percentage={`${mathStats.percentage}%`}
             />
 
@@ -558,12 +426,8 @@ const ReportDashboardScreen = () => {
             <MissionRow
               icon="⌨"
               name="Typing Mission"
-              completed={String(
-                typingStats.completed,
-              )}
-              total={String(
-                typingStats.total,
-              )}
+              completed={String(typingStats.completed)}
+              total={String(typingStats.total)}
               percentage={`${typingStats.percentage}%`}
             />
 
@@ -572,25 +436,17 @@ const ReportDashboardScreen = () => {
             <MissionRow
               icon="📷"
               name="Photo Mission"
-              completed={String(
-                photoStats.completed,
-              )}
-              total={String(
-                photoStats.total,
-              )}
+              completed={String(photoStats.completed)}
+              total={String(photoStats.total)}
               percentage={`${photoStats.percentage}%`}
             />
-
           </View>
 
           {/* Achievements */}
 
-          <Text style={styles.sectionTitle}>
-            Achievements
-          </Text>
+          <Text style={styles.sectionTitle}>Achievements</Text>
 
           <View style={styles.achievementCard}>
-
             <Achievement
               icon="🔥"
               title="5 Day Streak"
@@ -615,29 +471,19 @@ const ReportDashboardScreen = () => {
               description="Complete 10 missions"
               completed={history.length >= 10}
             />
-
           </View>
 
           {/* Insight */}
 
           <View style={styles.insightCard}>
+            <Text style={styles.insightLabel}>YOUR INSIGHT</Text>
 
-            <Text style={styles.insightLabel}>
-              YOUR INSIGHT
-            </Text>
+            <Text style={styles.insightTitle}>{insight.title}</Text>
 
-            <Text style={styles.insightTitle}>
-              {insight.title}
-            </Text>
-
-            <Text style={styles.insightText}>
-              {insight.text}
-            </Text>
-
+            <Text style={styles.insightText}>{insight.text}</Text>
           </View>
 
           <View style={styles.bottomSpace} />
-
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -654,28 +500,16 @@ type StatCardProps = {
   label: string;
 };
 
-const StatCard = ({
-  icon,
-  value,
-  label,
-}: StatCardProps) => {
+const StatCard = ({ icon, value, label }: StatCardProps) => {
   return (
     <View style={styles.statCard}>
-
       <View style={styles.statIcon}>
-        <Text style={styles.statIconText}>
-          {icon}
-        </Text>
+        <Text style={styles.statIconText}>{icon}</Text>
       </View>
 
-      <Text style={styles.statValue}>
-        {value}
-      </Text>
+      <Text style={styles.statValue}>{value}</Text>
 
-      <Text style={styles.statLabel}>
-        {label}
-      </Text>
-
+      <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
 };
@@ -692,39 +526,21 @@ type MissionRowProps = {
   percentage: `${number}%`;
 };
 
-const MissionRow = ({
-  icon,
-  name,
-  completed,
-  total,
-  percentage,
-}: MissionRowProps) => {
+const MissionRow = ({ icon, name, completed, total, percentage }: MissionRowProps) => {
   return (
     <View style={styles.missionRow}>
-
       <View style={styles.missionIcon}>
-        <Text style={styles.missionIconText}>
-          {icon}
-        </Text>
+        <Text style={styles.missionIconText}>{icon}</Text>
       </View>
 
       <View style={styles.missionContent}>
-
         <View style={styles.missionHeader}>
-          <Text style={styles.missionName}>
-            {name}
-          </Text>
+          <Text style={styles.missionName}>{name}</Text>
 
-          <Text style={styles.missionPercentage}>
-            {percentage}
-          </Text>
+          <Text style={styles.missionPercentage}>{percentage}</Text>
         </View>
 
-        <View
-          style={
-            styles.missionProgressBackground
-          }
-        >
+        <View style={styles.missionProgressBackground}>
           <View
             style={[
               styles.missionProgress,
@@ -738,7 +554,6 @@ const MissionRow = ({
         <Text style={styles.missionAttempts}>
           {completed} of {total} completed
         </Text>
-
       </View>
     </View>
   );
@@ -755,55 +570,22 @@ type AchievementProps = {
   completed: boolean;
 };
 
-const Achievement = ({
-  icon,
-  title,
-  description,
-  completed,
-}: AchievementProps) => {
+const Achievement = ({ icon, title, description, completed }: AchievementProps) => {
   return (
-    <View
-      style={[
-        styles.achievementRow,
-        !completed &&
-          styles.achievementDisabled,
-      ]}
-    >
-
+    <View style={[styles.achievementRow, !completed && styles.achievementDisabled]}>
       <View style={styles.achievementIcon}>
-        <Text style={styles.achievementIconText}>
-          {icon}
-        </Text>
+        <Text style={styles.achievementIconText}>{icon}</Text>
       </View>
 
       <View style={styles.achievementContent}>
+        <Text style={styles.achievementTitle}>{title}</Text>
 
-        <Text style={styles.achievementTitle}>
-          {title}
-        </Text>
-
-        <Text
-          style={
-            styles.achievementDescription
-          }
-        >
-          {description}
-        </Text>
-
+        <Text style={styles.achievementDescription}>{description}</Text>
       </View>
 
-      <View
-        style={[
-          styles.achievementCheck,
-          !completed &&
-            styles.achievementCheckDisabled,
-        ]}
-      >
-        <Text style={styles.achievementCheckText}>
-          {completed ? '✓' : '•'}
-        </Text>
+      <View style={[styles.achievementCheck, !completed && styles.achievementCheckDisabled]}>
+        <Text style={styles.achievementCheckText}>{completed ? '✓' : '•'}</Text>
       </View>
-
     </View>
   );
 };

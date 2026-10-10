@@ -52,7 +52,9 @@ export default function AlarmSuccessScreen({
           <Text style={styles.check}>✓</Text>
         </View>
 
-        <Text accessibilityRole="header" style={styles.title}>You're Awake!</Text>
+        <Text accessibilityRole="header" style={styles.title}>
+          You're Awake!
+        </Text>
         <Text style={styles.subtitle}>Mission completed successfully.</Text>
 
         <Card style={styles.card}>
@@ -64,7 +66,11 @@ export default function AlarmSuccessScreen({
           </View>
           <View style={styles.divider} />
 
-          <InfoRow icon="◷" label="WAKE UP TIME" value={`${alarm?.time ?? '--:--'} ${alarm?.period ?? ''}`.trim()} />
+          <InfoRow
+            icon="◷"
+            label="WAKE UP TIME"
+            value={`${alarm?.time ?? '--:--'} ${alarm?.period ?? ''}`.trim()}
+          />
           <InfoRow
             icon="✓"
             label="MISSION"
@@ -83,7 +89,12 @@ export default function AlarmSuccessScreen({
 
         <View style={styles.actions}>
           <PrimaryButton label="DONE" variant="dark" loading={leaving} onPress={goToDashboard} />
-          <PrimaryButton label="VIEW REPORT" variant="ghost" disabled={leaving} onPress={handleViewReport} />
+          <PrimaryButton
+            label="VIEW REPORT"
+            variant="ghost"
+            disabled={leaving}
+            onPress={handleViewReport}
+          />
         </View>
       </ScrollView>
     </Screen>
@@ -103,16 +114,32 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   check: { fontSize: 38, fontWeight: '700', color: COLORS.accent },
-  title: { textAlign: 'center', fontSize: FONT.headline + 4, fontWeight: '700', color: COLORS.text },
+  title: {
+    textAlign: 'center',
+    fontSize: FONT.headline + 4,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
   subtitle: { textAlign: 'center', marginTop: 6, fontSize: FONT.body, color: COLORS.muted },
   card: { marginTop: SPACING.lg, paddingBottom: 2 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cardLabel: { fontSize: FONT.caption, fontWeight: '700', letterSpacing: 1.5, color: COLORS.muted },
-  badge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.sm, backgroundColor: COLORS.success },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.success,
+  },
   badgeText: { fontSize: FONT.caption, fontWeight: '700', color: COLORS.onDark },
   divider: { height: 1, backgroundColor: COLORS.divider, marginVertical: SPACING.md },
   message: { marginTop: SPACING.lg, alignItems: 'center', paddingHorizontal: 8 },
   messageTitle: { fontSize: FONT.bodyLg, fontWeight: '700', color: COLORS.text },
-  messageText: { marginTop: 4, fontSize: FONT.body, lineHeight: 20, textAlign: 'center', color: COLORS.muted },
+  messageText: {
+    marginTop: 4,
+    fontSize: FONT.body,
+    lineHeight: 20,
+    textAlign: 'center',
+    color: COLORS.muted,
+  },
   actions: { marginTop: SPACING.lg, gap: SPACING.sm },
 });

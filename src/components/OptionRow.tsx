@@ -20,7 +20,8 @@ export default function OptionRow({ icon, title, description, selected, onPress,
       accessibilityLabel={`${title}. ${description}${badge ? `. ${badge.text}` : ''}`}
       activeOpacity={0.8}
       onPress={onPress}
-      style={[styles.card, selected && styles.cardSelected]}>
+      style={[styles.card, selected && styles.cardSelected]}
+    >
       <View style={[styles.iconBox, selected && styles.iconBoxSelected]}>
         <Text style={styles.icon}>{icon}</Text>
       </View>

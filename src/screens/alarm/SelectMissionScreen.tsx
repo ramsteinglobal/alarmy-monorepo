@@ -90,7 +90,11 @@ export default function SelectMissionScreen({
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingTop: SPACING.sm, paddingBottom: SPACING.xl },
-  selectedCard: { marginTop: SPACING.md, backgroundColor: COLORS.accentSoft, borderColor: COLORS.accent },
+  selectedCard: {
+    marginTop: SPACING.md,
+    backgroundColor: COLORS.accentSoft,
+    borderColor: COLORS.accent,
+  },
   selectedRow: { flexDirection: 'row', alignItems: 'center' },
   selectedIcon: {
     width: 52,
@@ -103,7 +107,12 @@ const styles = StyleSheet.create({
   },
   selectedIconText: { fontSize: 24, color: COLORS.onAccent, fontWeight: '700' },
   selectedText: { flex: 1 },
-  selectedLabel: { fontSize: FONT.caption, fontWeight: '700', letterSpacing: 1.2, color: COLORS.muted },
+  selectedLabel: {
+    fontSize: FONT.caption,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    color: COLORS.muted,
+  },
   selectedTitle: { marginTop: 2, fontSize: FONT.title, fontWeight: '700', color: COLORS.text },
   selectedDescription: { marginTop: 2, fontSize: FONT.caption, color: COLORS.muted },
   sectionHeader: {

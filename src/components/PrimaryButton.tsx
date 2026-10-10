@@ -29,7 +29,8 @@ export default function PrimaryButton({
       activeOpacity={0.85}
       disabled={inactive}
       onPress={onPress}
-      style={[styles.base, styles[variant], inactive && styles.inactive]}>
+      style={[styles.base, styles[variant], inactive && styles.inactive]}
+    >
       {loading ? (
         <ActivityIndicator color={variant === 'ghost' ? COLORS.text : COLORS.onDark} />
       ) : (

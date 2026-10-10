@@ -27,21 +27,34 @@ export default function TypingMission({ onComplete }: MissionProps) {
   return (
     <>
       <MissionCard label="TYPE THIS">
-        <Text style={{ fontSize: FONT.title, fontWeight: '700', textAlign: 'center', color: COLORS.text, marginTop: 8 }}>
+        <Text
+          style={{
+            fontSize: FONT.title,
+            fontWeight: '700',
+            textAlign: 'center',
+            color: COLORS.text,
+            marginTop: 8,
+          }}
+        >
           {target}
         </Text>
       </MissionCard>
       <TextInput
         style={[missionStyles.input, { minHeight: 90, textAlignVertical: 'top', paddingTop: 14 }]}
         value={value}
-        onChangeText={t => { setValue(t); setError(false); }}
+        onChangeText={t => {
+          setValue(t);
+          setError(false);
+        }}
         placeholder="Type the sentence"
         placeholderTextColor={COLORS.muted}
         multiline
         autoCorrect={false}
         accessibilityLabel="Type the sentence shown above"
       />
-      {error ? <Text style={missionStyles.error}>Please type the sentence exactly as shown.</Text> : null}
+      {error ? (
+        <Text style={missionStyles.error}>Please type the sentence exactly as shown.</Text>
+      ) : null}
       <View style={{ height: 16 }} />
       <PrimaryButton label="CHECK" onPress={check} />
     </>

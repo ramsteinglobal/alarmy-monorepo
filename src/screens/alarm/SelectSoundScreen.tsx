@@ -82,7 +82,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   preview: { marginTop: SPACING.sm, backgroundColor: COLORS.card },
-  previewLabel: { fontSize: FONT.caption, fontWeight: '700', letterSpacing: 1.2, color: COLORS.muted },
+  previewLabel: {
+    fontSize: FONT.caption,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    color: COLORS.muted,
+  },
   previewRow: { flexDirection: 'row', alignItems: 'center', marginTop: SPACING.sm, gap: 12 },
   previewIcon: { fontSize: 28 },
   previewName: { fontSize: FONT.bodyLg, fontWeight: '700', color: COLORS.text },

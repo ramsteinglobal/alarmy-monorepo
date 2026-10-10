@@ -1,19 +1,14 @@
 import React from 'react';
 import { Text } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
 import { COLORS } from '../theme';
 import type {
   AlarmStackParamList,
   MainTabParamList,
   RootStackParamList,
 } from '../types/navigation';
-
-import {
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
-
-import {
-  createBottomTabNavigator,
-} from '@react-navigation/bottom-tabs';
 
 // Auth
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -35,15 +30,14 @@ import MorningDashboardScreen from '../screens/morning/MorningDashboardScreen';
 import ReportDashboardScreen from '../screens/report/ReportDashboardScreen';
 import SettingsDashboardScreen from '../screens/settings/SettingsDashboardScreen';
 
-
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AlarmStack = createNativeStackNavigator<AlarmStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-
-// ======================================================
 // ALARM NAVIGATOR
-// ======================================================
+function AlarmDashboardRoute() {
+  return <AlarmDashboard time="07:00" period="AM" days="" label="Alarm" enabled={false} />;
+}
 
 function AlarmNavigator() {
   return (
@@ -53,54 +47,34 @@ function AlarmNavigator() {
         headerShown: false,
       }}
     >
-      <AlarmStack.Screen
-        name="AlarmDashboard"
-        component={AlarmDashboard}
-      />
+      <AlarmStack.Screen name="AlarmDashboard" component={AlarmDashboardRoute} />
 
-      <AlarmStack.Screen
-        name="CreateAlarm"
-        component={CreateAlarmScreen}
-      />
+      <AlarmStack.Screen name="CreateAlarm" component={CreateAlarmScreen} />
 
-      <AlarmStack.Screen
-        name="SelectSound"
-        component={SelectSoundScreen}
-      />
+      <AlarmStack.Screen name="SelectSound" component={SelectSoundScreen} />
 
-      <AlarmStack.Screen
-        name="SelectMission"
-        component={SelectMissionScreen}
-      />
+      <AlarmStack.Screen name="SelectMission" component={SelectMissionScreen} />
 
-      <AlarmStack.Screen
-        name="AlarmSummary"
-        component={AlarmSummaryScreen}
-      />
+      <AlarmStack.Screen name="AlarmSummary" component={AlarmSummaryScreen} />
 
       <AlarmStack.Screen
         name="AlarmRinging"
         component={AlarmRingingScreen}
+        options={{ gestureEnabled: false }}
       />
 
       <AlarmStack.Screen
         name="MissionExecution"
         component={MissionExecutionScreen}
+        options={{ gestureEnabled: false }}
       />
 
-      <AlarmStack.Screen
-        name="AlarmSuccess"
-        component={AlarmSuccessScreen}
-      />
+      <AlarmStack.Screen name="AlarmSuccess" component={AlarmSuccessScreen} />
     </AlarmStack.Navigator>
   );
 }
 
-
-// ======================================================
 // TAB ICON
-// ======================================================
-
 function TabIcon({ text }: { text: string }) {
   return (
     <Text
@@ -113,21 +87,15 @@ function TabIcon({ text }: { text: string }) {
   );
 }
 
-
-// ======================================================
 // MAIN TABS
-// ======================================================
-
 function MainTabs() {
   return (
     <Tab.Navigator
       initialRouteName="Alarm"
       screenOptions={{
         headerShown: false,
-
         tabBarActiveTintColor: COLORS.accent,
         tabBarInactiveTintColor: COLORS.tabInactive,
-
         tabBarStyle: {
           height: 68,
           paddingTop: 6,
@@ -135,96 +103,60 @@ function MainTabs() {
           backgroundColor: COLORS.surface,
           borderTopColor: COLORS.divider,
         },
-
         tabBarLabelStyle: {
           fontSize: 9,
         },
       }}
     >
-
-      {/* ================= ALARM ================= */}
-
       <Tab.Screen
         name="Alarm"
         component={AlarmNavigator}
         options={{
           tabBarLabel: 'Alarm',
-
-          tabBarIcon: () => (
-            <TabIcon text="◷" />
-          ),
+          tabBarIcon: () => <TabIcon text="◷" />,
         }}
       />
-
-
-      {/* ================= SLEEP ================= */}
 
       <Tab.Screen
         name="Sleep"
         component={SleepDashboardScreen}
         options={{
           tabBarLabel: 'Sleep',
-
-          tabBarIcon: () => (
-            <TabIcon text="☾" />
-          ),
+          tabBarIcon: () => <TabIcon text="☾" />,
         }}
       />
-
-
-      {/* ================= MORNING ================= */}
 
       <Tab.Screen
         name="Morning"
         component={MorningDashboardScreen}
         options={{
           tabBarLabel: 'Morning',
-
-          tabBarIcon: () => (
-            <TabIcon text="☀" />
-          ),
+          tabBarIcon: () => <TabIcon text="☀" />,
         }}
       />
-
-
-      {/* ================= REPORT ================= */}
 
       <Tab.Screen
         name="Report"
         component={ReportDashboardScreen}
         options={{
           tabBarLabel: 'Report',
-
-          tabBarIcon: () => (
-            <TabIcon text="▥" />
-          ),
+          tabBarIcon: () => <TabIcon text="▥" />,
         }}
       />
-
-
-      {/* ================= SETTINGS ================= */}
 
       <Tab.Screen
         name="Settings"
         component={SettingsDashboardScreen}
         options={{
           tabBarLabel: 'Settings',
-
-          tabBarIcon: () => (
-            <TabIcon text="⚙" />
-          ),
+          tabBarIcon: () => <TabIcon text="⚙" />,
         }}
       />
-
     </Tab.Navigator>
   );
 }
 
-
-// ======================================================
 // ROOT NAVIGATOR
-// ======================================================
-
 export default function AppNavigator() {
   return (
     <RootStack.Navigator
@@ -233,25 +165,9 @@ export default function AppNavigator() {
         headerShown: false,
       }}
     >
-
-      {/* Login */}
-      <RootStack.Screen
-        name="Login"
-        component={LoginScreen}
-      />
-
-      {/* Signup */}
-      <RootStack.Screen
-        name="Signup"
-        component={SignupScreen}
-      />
-
-      {/* Main Application */}
-      <RootStack.Screen
-        name="Main"
-        component={MainTabs}
-      />
-
+      <RootStack.Screen name="Login" component={LoginScreen} />
+      <RootStack.Screen name="Signup" component={SignupScreen} />
+      <RootStack.Screen name="Main" component={MainTabs} />
     </RootStack.Navigator>
   );
 }

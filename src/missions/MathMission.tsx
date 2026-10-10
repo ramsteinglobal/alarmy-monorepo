@@ -30,14 +30,20 @@ export default function MathMission({ onComplete }: MissionProps) {
   return (
     <>
       <MissionCard label="SOLVE">
-        <Text accessibilityLabel={`${q.a} plus ${q.b}`} style={{ fontSize: 44, fontWeight: '700', color: COLORS.text, marginTop: 8 }}>
+        <Text
+          accessibilityLabel={`${q.a} plus ${q.b}`}
+          style={{ fontSize: 44, fontWeight: '700', color: COLORS.text, marginTop: 8 }}
+        >
           {q.a} + {q.b} = ?
         </Text>
       </MissionCard>
       <TextInput
         style={missionStyles.input}
         value={value}
-        onChangeText={t => { setValue(t); setError(false); }}
+        onChangeText={t => {
+          setValue(t);
+          setError(false);
+        }}
         placeholder="Enter your answer"
         placeholderTextColor={COLORS.muted}
         keyboardType="numeric"

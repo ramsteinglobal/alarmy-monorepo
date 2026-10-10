@@ -10,7 +10,8 @@ export default function InfoRow({ icon, label, value, description }: Props) {
     <View
       style={styles.row}
       accessible
-      accessibilityLabel={`${label}: ${value}${description ? `. ${description}` : ''}`}>
+      accessibilityLabel={`${label}: ${value}${description ? `. ${description}` : ''}`}
+    >
       <View style={styles.iconBox}>
         <Text style={styles.icon}>{icon}</Text>
       </View>

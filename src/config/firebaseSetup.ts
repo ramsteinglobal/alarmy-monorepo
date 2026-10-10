@@ -14,7 +14,7 @@ import {
   serverTimestamp,
   setDoc,
 } from '@react-native-firebase/firestore';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 export const firebaseAuth = getAuth();
 const firestore = getFirestore();
@@ -31,15 +31,11 @@ export const signUp = async (
   password: string,
   sleepPersona: SleepPersona,
 ) => {
-  const credential = await createUserWithEmailAndPassword(
-    firebaseAuth,
-    email,
-    password,
-  );
+  const credential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
   const user = credential.user;
 
   try {
-    await updateProfile(user, {displayName: fullName});
+    await updateProfile(user, { displayName: fullName });
     await setDoc(doc(firestore, 'users', user.uid), {
       uid: user.uid,
       fullName,
@@ -57,41 +53,41 @@ export const signUp = async (
 };
 
 export const signIn = async (email: string, password: string) => {
-  const credential = await signInWithEmailAndPassword(
-    firebaseAuth,
-    email,
-    password,
-  );
+  const credential = await signInWithEmailAndPassword(firebaseAuth, email, password);
   return credential.user;
 };
 
 export const signInWithGoogle = async (sleepPersona?: SleepPersona) => {
-  await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   const response = await GoogleSignin.signIn();
   if (response.type !== 'success' || !response.data.idToken) {
     return null;
   }
 
   const credential = GoogleAuthProvider.credential(response.data.idToken);
-  const {user} = await signInWithCredential(firebaseAuth, credential);
+  const { user } = await signInWithCredential(firebaseAuth, credential);
   const profileRef = doc(firestore, 'users', user.uid);
   const existingProfile = await getDoc(profileRef);
-  await setDoc(profileRef, {
-    uid: user.uid,
-    fullName: user.displayName ?? response.data.user.name ?? '',
-    email: user.email ?? response.data.user.email,
-    photoURL: user.photoURL ?? response.data.user.photo,
-    provider: 'google',
-    ...(sleepPersona ? {sleepPersona} : {}),
-    ...(existingProfile.exists() ? {} : {createdAt: serverTimestamp()}),
-  }, {merge: true});
+  await setDoc(
+    profileRef,
+    {
+      uid: user.uid,
+      fullName: user.displayName ?? response.data.user.name ?? '',
+      email: user.email ?? response.data.user.email,
+      photoURL: user.photoURL ?? response.data.user.photo,
+      provider: 'google',
+      ...(sleepPersona ? { sleepPersona } : {}),
+      ...(existingProfile.exists() ? {} : { createdAt: serverTimestamp() }),
+    },
+    { merge: true },
+  );
   return user;
 };
 
 export const logOut = async () => signOut(firebaseAuth);
 
 export const getAuthErrorMessage = (error: unknown) => {
-  const code = (error as {code?: string})?.code;
+  const code = (error as { code?: string })?.code;
   switch (code) {
     case 'auth/invalid-email':
       return 'Please enter a valid email address.';
@@ -110,6 +106,6 @@ export const getAuthErrorMessage = (error: unknown) => {
     case 'auth/account-exists-with-different-credential':
       return 'An account with this email already exists. Sign in using its original method.';
     default:
-      return (error as {message?: string})?.message ?? 'Something went wrong. Please try again.';
+      return (error as { message?: string })?.message ?? 'Something went wrong. Please try again.';
   }
 };
