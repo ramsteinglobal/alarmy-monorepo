@@ -1,20 +1,38 @@
-node_modules
-dist
-build
-.expo
-*.log
-.DS_Store
+# Dependencies
+node_modules/
+.npm/
+.yarn/
+.pnp.*
+.yarnrc.yml
 
-# Expo / React Native
-.expo-shared
-web-build
+# Build outputs — never commit compiled code
+dist/
+build/
+web-build/
+*.tsbuildinfo
+.turbo/
+.expo/
+.expo-shared/
 
-# Firebase
+# Expo / React Native / EAS
+.eas/
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+*.apk
+*.aab
+*.ipa
+
+# Firebase — local only
 .firebaserc
+.firebase/
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
-backend/functions/lib
+database-debug.log
+backend/functions/lib/
 
 # Env — NEVER commit real keys
 .env
@@ -22,8 +40,67 @@ backend/functions/lib
 !.env.example
 apps/mobile/.env
 
-# OS / IDE
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / editors — keep shared settings only
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
-.idea
+.idea/
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+*.bak
+
+# Temp / scratch — never push local junk
+tmp/
+temp/
+.tmp/
+scratch/
+*.tmp
+*.temp
+
+# Markdown / AI artifacts — moderate ban
+# Keeps README.md, docs/, backend/README, apps/mobile/README, .github/
+# Blocks scratch notes and AI dumps people keep pushing by mistake
+*artifact*.md
+*artefact*.md
+AI_*.md
+CHAT*.md
+CLAUDE*.md
+CURSOR*.md
+DRAFT*.md
+NOTE*.md
+NOTES*.md
+SCRATCH*.md
+SUMMARY*.md
+TODO-*.md
+*-TODO.md
+tmp-*.md
+artifacts/
+.ai/
+.claude/
+.cursor/
+.aider*
+
+# Testing / coverage
+coverage/
+.nyc_output/
+.jest/
+
+# Misc local files
+*.pem
+*.key
+.snapshots/
