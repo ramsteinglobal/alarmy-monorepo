@@ -1,3 +1,4 @@
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ALARM_STORAGE_KEY = '@alarmy_alarms';
@@ -22,7 +23,7 @@ export type StoredAlarm = {
   enabled: boolean;
 };
 
-// Get all saved alarms
+// Get all saved alarms safely
 export const getAlarms = async (): Promise<StoredAlarm[]> => {
   try {
     const data = await AsyncStorage.getItem(ALARM_STORAGE_KEY);
@@ -31,8 +32,9 @@ export const getAlarms = async (): Promise<StoredAlarm[]> => {
       return [];
     }
 
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed: unknown = JSON.parse(data);
+
+    return Array.isArray(parsed) ? (parsed as StoredAlarm[]) : [];
   } catch (error) {
     console.error('Error loading alarms:', error);
     return [];
@@ -62,7 +64,9 @@ export const addAlarm = async (alarm: StoredAlarm): Promise<void> => {
 };
 
 // Update an existing alarm
-export const updateAlarm = async (updatedAlarm: StoredAlarm): Promise<void> => {
+export const updateAlarm = async (
+  updatedAlarm: StoredAlarm,
+): Promise<void> => {
   try {
     const alarms = await getAlarms();
 
