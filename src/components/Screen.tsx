@@ -21,13 +21,12 @@ export default function Screen({
 }: Props) {
   return (
     <SafeAreaView edges={edges} style={[styles.fill, { backgroundColor }, style]}>
-      <StatusBar
-        barStyle={lightContent ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundColor}
-      />
+      <StatusBar barStyle={lightContent ? 'light-content' : 'dark-content'} />
       {children}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({ fill: { flex: 1 } });
+const styles = StyleSheet.create({
+  fill: { flex: 1 },
+});
