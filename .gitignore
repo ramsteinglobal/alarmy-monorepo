@@ -27,3 +27,13 @@ apps/mobile/.env
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea
+
+
+# Android generated build artifacts
+/android/.gradle/
+/android/app/.cxx/
+
+# Android debug keystore
+/android/app/debug.keystore
+
+
