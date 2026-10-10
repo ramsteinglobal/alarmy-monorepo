@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "287845974246",
+    "project_id": "alamyapp",
+    "storage_bucket": "alamyapp.firebasestorage.app"
+  },
+  
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:287845974246:android:619d8f844d4de733387b27",
+        "android_client_info": {
+          "package_name": "com.alarmyapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "287845974246-1dhm6fh3dpe4b7gld9b862ob6p6eo563.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alarmyapp",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "287845974246-490t3qus833b832fqhrq4gfep08agieh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPMdmFLRFzjhTclCm6ZE9PPyZLC33vqaM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "287845974246-490t3qus833b832fqhrq4gfep08agieh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

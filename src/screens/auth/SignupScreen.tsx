@@ -1,10 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
+import {
+  getAuthErrorMessage,
+  signInWithGoogle,
+  signUp,
+  type SleepPersona,
+} from '../../config/firebaseSetup';
 
-const personas = [
+const personas: { id: SleepPersona; title: string; subtitle: string; icon: string }[] = [
   {
     id: 'early',
     title: 'Early Bird',
@@ -26,9 +41,58 @@ const personas = [
 ];
 
 export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) {
-  const [selectedPersona, setSelectedPersona] = useState('early');
+  const [selectedPersona, setSelectedPersona] = useState<SleepPersona>('early');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
+    const normalizedName = fullName.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedName || !normalizedEmail || !password) {
+      Alert.alert('Missing details', 'Please enter your name, email, and password.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Password too short', 'Use at least 6 characters.');
+      return;
+    }
+    if (!acceptedTerms) {
+      Alert.alert('Terms required', 'Please accept the terms and privacy policy.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await signUp(normalizedName, normalizedEmail, password, selectedPersona);
+      navigation.replace('Main');
+    } catch (error: any) {
+      Alert.alert('Signup failed', getAuthErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    if (!acceptedTerms) {
+      Alert.alert('Terms required', 'Please accept the terms and privacy policy.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const user = await signInWithGoogle(selectedPersona);
+      if (user) navigation.replace('Main');
+    } catch (error) {
+      Alert.alert('Google sign in failed', getAuthErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getPasswordStrength = () => {
     if (password.length === 0) return '';
@@ -49,7 +113,11 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
 
         {/* Social Login */}
         <View style={styles.socialRow}>
-          <TouchableOpacity style={styles.socialButton}>
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={handleGoogleSignup}
+            disabled={loading}
+          >
             <Text style={styles.googleIcon}>G</Text>
             <Text style={styles.socialText}>Google</Text>
           </TouchableOpacity>
@@ -71,6 +139,9 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
             placeholder="Indrabhan"
             placeholderTextColor="#AAAAAA"
             autoCapitalize="words"
+            value={fullName}
+            onChangeText={setFullName}
+            editable={!loading}
           />
         </View>
 
@@ -86,6 +157,11 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
             placeholderTextColor="#AAAAAA"
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
+            value={email}
+            onChangeText={setEmail}
+            editable={!loading}
+            textContentType="emailAddress"
           />
         </View>
 
@@ -102,6 +178,9 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
             secureTextEntry
             value={password}
             onChangeText={setPassword}
+            editable={!loading}
+            autoCapitalize="none"
+            textContentType="newPassword"
           />
         </View>
 
@@ -140,6 +219,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
                 style={[styles.personaCard, selected && styles.personaCardSelected]}
                 onPress={() => setSelectedPersona(persona.id)}
                 activeOpacity={0.8}
+                disabled={loading}
               >
                 <Text style={styles.personaIcon}>{persona.icon}</Text>
 
@@ -158,6 +238,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
           style={styles.termsRow}
           onPress={() => setAcceptedTerms(!acceptedTerms)}
           activeOpacity={0.8}
+          disabled={loading}
         >
           <View style={[styles.checkbox, acceptedTerms && styles.checkboxSelected]}>
             {acceptedTerms && <Text style={styles.check}>✓</Text>}
@@ -169,16 +250,21 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
         {/* Create Account */}
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => navigation.replace('Main')}
+          onPress={handleSignup}
           activeOpacity={0.8}
+          disabled={loading}
         >
-          <Text style={styles.primaryText}>Create Free Account →</Text>
+          {loading ? (
+            <ActivityIndicator color={COLORS.text} />
+          ) : (
+            <Text style={styles.primaryText}>Create Free Account →</Text>
+          )}
         </TouchableOpacity>
 
         {/* Sign In */}
         <Text style={styles.bottomText}>
           Already registered?{' '}
-          <Text style={styles.signInLink} onPress={() => navigation.goBack()}>
+          <Text style={styles.signInLink} onPress={() => navigation.goBack()} disabled={loading}>
             Sign In
           </Text>
         </Text>

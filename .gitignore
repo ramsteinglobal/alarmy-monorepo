@@ -58,9 +58,12 @@ Desktop.ini
 !.vscode/extensions.json
 .idea/
 
-# Android generated build artifacts
+# Android generated build artifacts (union of both branches)
+android/app/.cxx
+android/.gradle
 /android/.gradle/
 /android/app/.cxx/
+.npm-cache
 
 *.swp
 *.swo

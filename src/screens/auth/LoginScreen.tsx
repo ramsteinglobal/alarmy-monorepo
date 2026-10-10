@@ -8,16 +8,53 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
+import { getAuthErrorMessage, signIn, signInWithGoogle } from '../../config/firebaseSetup';
 
 type Props = RootScreenProps<'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const user = await signInWithGoogle();
+      if (user) navigation.replace('Main');
+    } catch (error) {
+      Alert.alert('Google sign in failed', getAuthErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
+      Alert.alert('Missing details', 'Please enter your email and password.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await signIn(normalizedEmail, password);
+      navigation.replace('Main');
+    } catch (error) {
+      Alert.alert('Sign in failed', getAuthErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -35,7 +72,11 @@ export default function LoginScreen({ navigation }: Props) {
             Neutralize sleep inertia with smart circadian wake-up routines
           </Text>
 
-          <TouchableOpacity style={styles.socialButton}>
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+          >
             <Text style={styles.socialText}>G Continue with Google</Text>
           </TouchableOpacity>
 
@@ -54,6 +95,9 @@ export default function LoginScreen({ navigation }: Props) {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+            textContentType="emailAddress"
           />
 
           <View style={styles.passwordRow}>
@@ -70,10 +114,17 @@ export default function LoginScreen({ navigation }: Props) {
             secureTextEntry
             value={password}
             onChangeText={setPassword}
+            editable={!loading}
+            autoCapitalize="none"
+            textContentType="password"
           />
 
-          <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.replace('Main')}>
-            <Text style={styles.primaryText}>Sign In to AlarmyApp →</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleSignIn} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color={COLORS.text} />
+            ) : (
+              <Text style={styles.primaryText}>Sign In to AlarmyApp →</Text>
+            )}
           </TouchableOpacity>
 
           <Text style={styles.signupText}>

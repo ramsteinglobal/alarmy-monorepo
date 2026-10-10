@@ -1,13 +1,124 @@
-import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {
+  CommonActions,
+  useFocusEffect,
+  useNavigation,
+  type NavigationProp,
+} from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { doc, getDoc, getFirestore } from '@react-native-firebase/firestore';
 
 import Screen from '../../components/Screen';
 import { COLORS } from '../../theme';
+import { firebaseAuth, getAuthErrorMessage, logOut } from '../../config/firebaseSetup';
+import type { MainTabParamList, RootStackParamList } from '../../types/navigation';
+
+type UserProfile = {
+  fullName: string;
+  email: string;
+  sleepPersona?: string;
+  provider: string;
+};
+
+const personaLabels: Record<string, string> = {
+  early: 'Early Bird',
+  deep: 'Deep Sleeper',
+  napper: 'Power Napper',
+};
 
 export default function SettingsDashboardScreen() {
+  const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
+  const rootNavigation = tabNavigation.getParent<NavigationProp<RootStackParamList>>();
   const [notifications, setNotifications] = useState(true);
   const [vibration, setVibration] = useState(true);
   const [gradualVolume, setGradualVolume] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const loadProfile = async () => {
+        const user = firebaseAuth.currentUser;
+        if (!user) {
+          if (active) {
+            setProfile(null);
+            setProfileLoading(false);
+          }
+          return;
+        }
+
+        setProfileLoading(true);
+        try {
+          const profileSnapshot = await getDoc(doc(getFirestore(), 'users', user.uid));
+          const savedProfile = profileSnapshot.exists() ? profileSnapshot.data() : {};
+          const providerId = user.providerData[0]?.providerId;
+          if (active) {
+            setProfile({
+              fullName: savedProfile.fullName ?? user.displayName ?? 'Alarm User',
+              email: savedProfile.email ?? user.email ?? '',
+              sleepPersona: savedProfile.sleepPersona,
+              provider:
+                savedProfile.provider === 'google'
+                  ? 'Google'
+                  : savedProfile.provider === 'password'
+                  ? 'Email and password'
+                  : savedProfile.provider ??
+                    (providerId === 'google.com' ? 'Google' : 'Email and password'),
+            });
+          }
+        } catch {
+          if (active) {
+            setProfile({
+              fullName: user.displayName ?? 'Alarm User',
+              email: user.email ?? '',
+              provider:
+                user.providerData[0]?.providerId === 'google.com' ? 'Google' : 'Email and password',
+            });
+          }
+        } finally {
+          if (active) setProfileLoading(false);
+        }
+      };
+
+      loadProfile();
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
+
+  const confirmLogout = () => {
+    Alert.alert('Log out?', 'You will need to sign in again to use your account.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: async () => {
+          setLoggingOut(true);
+          try {
+            await logOut();
+            rootNavigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Login' }] }));
+          } catch (error) {
+            Alert.alert('Log out failed', getAuthErrorMessage(error));
+          } finally {
+            setLoggingOut(false);
+          }
+        },
+      },
+    ]);
+  };
 
   const showComingSoon = (title: string) => {
     Alert.alert(title, `${title} settings will be available soon.`);
@@ -28,16 +139,38 @@ export default function SettingsDashboardScreen() {
 
         <View style={styles.profileCard}>
           <View style={styles.profileAvatar}>
-            <Text style={styles.profileAvatarText}>I</Text>
+            <Text style={styles.profileAvatarText}>
+              {(
+                profile?.fullName?.trim().charAt(0) ||
+                profile?.email?.charAt(0) ||
+                'A'
+              ).toUpperCase()}
+            </Text>
           </View>
 
           <View style={styles.profileContent}>
-            <Text style={styles.profileName}>Alarm User</Text>
+            <Text style={styles.profileName}>
+              {profileLoading ? 'Loading profile…' : profile?.fullName ?? 'Alarm User'}
+            </Text>
 
-            <Text style={styles.profileSubtitle}>Manage your wake-up experience</Text>
+            <Text style={styles.profileSubtitle}>
+              {profile?.email || 'Account details unavailable'}
+            </Text>
           </View>
+        </View>
 
-          <Text style={styles.arrow}>›</Text>
+        <Text style={styles.sectionTitle}>ACCOUNT</Text>
+        <View style={styles.card}>
+          <AccountInfoRow label="Sign-in method" value={profile?.provider ?? '—'} />
+          <View style={styles.divider} />
+          <AccountInfoRow
+            label="Sleep persona"
+            value={
+              profile?.sleepPersona
+                ? personaLabels[profile.sleepPersona] ?? profile.sleepPersona
+                : 'Not set'
+            }
+          />
         </View>
 
         {/* Alarm Settings */}
@@ -153,9 +286,31 @@ export default function SettingsDashboardScreen() {
 
         <Text style={styles.version}>Version 1.0.0</Text>
 
+        <TouchableOpacity
+          style={[styles.logoutButton, loggingOut && styles.logoutButtonDisabled]}
+          onPress={confirmLogout}
+          disabled={loggingOut}
+          activeOpacity={0.8}
+        >
+          {loggingOut ? (
+            <ActivityIndicator color={COLORS.danger} />
+          ) : (
+            <Text style={styles.logoutText}>Log Out</Text>
+          )}
+        </TouchableOpacity>
+
         <View style={styles.bottomSpace} />
       </ScrollView>
     </Screen>
+  );
+}
+
+function AccountInfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.accountRow}>
+      <Text style={styles.accountLabel}>{label}</Text>
+      <Text style={styles.accountValue}>{value}</Text>
+    </View>
   );
 }
 
@@ -314,6 +469,27 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
   },
 
+  accountRow: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+
+  accountLabel: {
+    fontSize: 12,
+    color: COLORS.muted,
+  },
+
+  accountValue: {
+    flexShrink: 1,
+    textAlign: 'right',
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+
   arrow: {
     fontSize: 23,
     color: COLORS.muted,
@@ -390,6 +566,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     color: COLORS.muted,
+  },
+
+  logoutButton: {
+    minHeight: 48,
+    marginTop: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E8C7C7',
+    backgroundColor: '#FFF8F8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  logoutButtonDisabled: {
+    opacity: 0.6,
+  },
+
+  logoutText: {
+    color: COLORS.danger,
+    fontSize: 14,
+    fontWeight: '700',
   },
 
   bottomSpace: {
