@@ -57,9 +57,17 @@ function AlarmNavigator() {
 
       <AlarmStack.Screen name="AlarmSummary" component={AlarmSummaryScreen} />
 
-      <AlarmStack.Screen name="AlarmRinging" component={AlarmRingingScreen} />
+      <AlarmStack.Screen
+        name="AlarmRinging"
+        component={AlarmRingingScreen}
+        options={{ gestureEnabled: false }}
+      />
 
-      <AlarmStack.Screen name="MissionExecution" component={MissionExecutionScreen} />
+      <AlarmStack.Screen
+        name="MissionExecution"
+        component={MissionExecutionScreen}
+        options={{ gestureEnabled: false }}
+      />
 
       <AlarmStack.Screen name="AlarmSuccess" component={AlarmSuccessScreen} />
     </AlarmStack.Navigator>

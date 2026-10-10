@@ -31,7 +31,8 @@ export const getAlarms = async (): Promise<StoredAlarm[]> => {
       return [];
     }
 
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
     console.error('Error loading alarms:', error);
     return [];
