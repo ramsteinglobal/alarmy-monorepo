@@ -33,7 +33,6 @@ apps/mobile/.env
 /android/.gradle/
 /android/app/.cxx/
 
-# Android debug keystore
-/android/app/debug.keystore
+
 
 
