@@ -36,15 +36,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // ALARM NAVIGATOR
 function AlarmDashboardRoute() {
-  return (
-    <AlarmDashboard
-      time="07:00"
-      period="AM"
-      days=""
-      label="Alarm"
-      enabled={false}
-    />
-  );
+  return <AlarmDashboard time="07:00" period="AM" days="" label="Alarm" enabled={false} />;
 }
 
 function AlarmNavigator() {
@@ -55,10 +47,7 @@ function AlarmNavigator() {
         headerShown: false,
       }}
     >
-      <AlarmStack.Screen
-        name="AlarmDashboard"
-        component={AlarmDashboardRoute}
-      />
+      <AlarmStack.Screen name="AlarmDashboard" component={AlarmDashboardRoute} />
 
       <AlarmStack.Screen name="CreateAlarm" component={CreateAlarmScreen} />
 
