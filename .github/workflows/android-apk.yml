@@ -2,6 +2,11 @@ name: Android APK Build
 
 on:
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - 'backend/**'
+      - 'ios/**'
   push:
     branches: [main]
   workflow_dispatch:
@@ -9,7 +14,37 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  quality:
+    name: Lint, typecheck and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Run JavaScript lint and type checks
+        run: |
+          npm run lint
+          npm run typecheck
+
+      - name: Run tests if they exist
+        run: npm test -- --passWithNoTests --watch=false
+
   android-debug-apk:
     name: Build Android debug APK
     runs-on: ubuntu-latest
@@ -51,26 +86,20 @@ jobs:
             "platform-tools" \
             "platforms;android-37.0" \
             "build-tools;37.0.0" \
-            "ndk;27.1.12297006" \
-            "cmake;3.22.1"
+            "ndk;27.1.12297006"
+
+      - name: Set up Gradle caching
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Run JavaScript lint and type checks
-        run: |
-          npm run lint
-          npm run typecheck
-
-      - name: Run tests if they exist
-        run: npm test -- --passWithNoTests --watch=false
-
-      - name: Build debug APK
+      - name: Build debug APK (arm64 only, physical test phones)
         shell: bash
         run: |
           set -euo pipefail
           cd android
-          ./gradlew --no-daemon --stacktrace assembleDebug
+          ./gradlew --no-daemon --stacktrace assembleDebug -PreactNativeArchitectures=arm64-v8a
 
       - name: Verify APK exists and is non-empty
         shell: bash
