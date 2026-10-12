@@ -33,17 +33,19 @@ if ! command -v sdkmanager >/dev/null 2>&1; then
   export PATH="$(dirname "${SDKMANAGER_BIN}"):${PATH}"
 fi
 
-if [ ! -f "${SDK_ROOT}/platforms/android-37/android.jar" ] \
+if [ ! -f "${SDK_ROOT}/platforms/android-37.0/android.jar" ] \
   || [ ! -d "${SDK_ROOT}/build-tools/37.0.0" ] \
   || [ ! -d "${SDK_ROOT}/ndk/27.1.12297006" ] \
   || [ ! -d "${SDK_ROOT}/cmake/3.22.1" ] \
   || [ ! -x "${SDK_ROOT}/platform-tools/adb" ]; then
-  echo "Installing the Android SDK packages required by this project (platforms;android-37, build-tools;37.0.0, ndk;27.1.12297006)."
+  echo "Installing the Android SDK packages required by this project (platforms;android-37.0, build-tools;37.0.0, ndk;27.1.12297006)."
+  set +o pipefail
   yes | sdkmanager --licenses >/dev/null
-  sdkmanager --install "platform-tools" "platforms;android-37" "build-tools;37.0.0" "ndk;27.1.12297006" "cmake;3.22.1"
+  set -o pipefail
+  sdkmanager --install "platform-tools" "platforms;android-37.0" "build-tools;37.0.0" "ndk;27.1.12297006" "cmake;3.22.1"
 fi
 
-if [ ! -f "${SDK_ROOT}/platforms/android-37/android.jar" ]; then
+if [ ! -f "${SDK_ROOT}/platforms/android-37.0/android.jar" ]; then
   echo "The Android SDK setup did not finish correctly. Check the SDK path and install the Android 37 platform." >&2
   exit 1
 fi
