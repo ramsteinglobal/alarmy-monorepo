@@ -15,10 +15,15 @@
     "ANDROID_HOME": "/opt/android-sdk",
     "ANDROID_SDK_ROOT": "/opt/android-sdk"
   },
-  "forwardPorts": [8081],
+  "forwardPorts": [8081, 8082],
   "portsAttributes": {
     "8081": {
       "label": "Metro (React Native)",
+      "onAutoForward": "notify",
+      "visibility": "private"
+    },
+    "8082": {
+      "label": "Private APK download",
       "onAutoForward": "notify",
       "visibility": "private"
     }

@@ -71,7 +71,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
     try {
       await signUp(normalizedName, normalizedEmail, password, selectedPersona);
       navigation.replace('Main');
-    } catch (error: any) {
+    } catch (error: unknown) {
       Alert.alert('Signup failed', getAuthErrorMessage(error));
     } finally {
       setLoading(false);
