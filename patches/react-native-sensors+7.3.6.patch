@@ -1,0 +1,42 @@
+diff --git a/node_modules/react-native-sensors/android/build.gradle b/node_modules/react-native-sensors/android/build.gradle
+index f1526ec..20cfd02 100644
+--- a/node_modules/react-native-sensors/android/build.gradle
++++ b/node_modules/react-native-sensors/android/build.gradle
+@@ -6,13 +6,12 @@ def safeExtGet(prop, fallback) {
+ repositories {
+   mavenCentral()
+   google()
+-  jcenter()
+ }
+ 
+ buildscript {
+     repositories {
+         google()
+-        jcenter()
++        mavenCentral()
+     }
+ 
+     dependencies {
+@@ -25,17 +24,16 @@ apply plugin: 'com.android.library'
+ android {
+     compileSdkVersion safeExtGet('compileSdkVersion', 23)
+ 
++    def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
++    if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
++        namespace "com.sensors"
++    }
++
+     defaultConfig {
+         minSdkVersion 17
+         targetSdkVersion 29
+         versionCode 1
+         versionName "1.0"
+-        ndk {
+-            abiFilters "armeabi-v7a", "x86"
+-        }
+-    }
+-    lintOptions {
+-       warning 'InvalidPackage'
+     }
+ }
+ 
