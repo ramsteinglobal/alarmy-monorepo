@@ -7,12 +7,12 @@ laptop only needs VS Code Desktop and the small Android Platform Tools package
 
 ## Choose how you want to test
 
-| Goal                                             | Recommended route                                                                                    | What you need                                                                      |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Code in Codespaces and see JS changes on a phone | Open the Codespace in VS Code Desktop, forward Metro privately, and use local `adb reverse` over USB | GitHub access, Codespaces, VS Code Desktop, Android phone, small local `adb` tools |
-| Install and try the app without live updates     | Build APK in Codespaces; download and install it on a phone                                          | GitHub access, Codespaces, Android phone                                           |
-| Get an APK without building yourself             | Download the APK artifact from a successful GitHub Actions run                                       | GitHub access, Android phone                                                       |
-| Test using a browser-based emulator              | Use an externally provided cloud device service                                                      | A vendor account/service; availability and cost vary                               |
+| Goal                                                 | Recommended route                                                                               | What you need                                                                      |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Code in Codespaces and see JS changes on a phone     | VS Code Desktop, private Metro port, and local `adb reverse` over USB                           | GitHub access, Codespaces, VS Code Desktop, Android phone, small local `adb` tools |
+| Install the debug app without manually moving a file | Serve the APK through a private Codespaces port and fetch/install it from PowerShell with `adb` | Codespaces, VS Code Desktop, Android phone, `adb`                                  |
+| Get an APK without building yourself                 | Download the APK artifact from a successful GitHub Actions run                                  | GitHub access, Android phone                                                       |
+| Test using a browser-based emulator                  | Use an externally provided cloud device service                                                 | A vendor account/service; availability and cost vary                               |
 
 An APK is an Android install package. It does not run in a normal laptop browser.
 
@@ -43,18 +43,17 @@ USB. The port is private and does not need to be made public.
 
 Give each tester their **own Codespace**, opened in VS Code Desktop, and their
 own USB-connected phone. Each Codespace has its own private Metro server and
-private port forward. Everyone can install the same debug APK once, but each
-phone should connect only to the Metro server in that tester's own Codespace.
+private port forward. Each teammate builds/serves an APK from their Codespace
+for their own one-time install. After that, each phone connects only to the
+Metro server in that tester's own Codespace. Everyone should check out the same
+branch/commit if they need to test the same code.
 
-1. A maintainer builds one debug APK from the commit the team wants to test and
-   makes it available as the private GitHub Actions `alarmy-debug-apk` artifact
-   (or shares the APK through another team-approved private channel). Testers
-   download and install it once. The APK must come from a trusted team build.
-2. Each tester opens their own Codespace on that same commit or branch in VS
-   Code Desktop. Do not all edit or run Metro in one shared Codespace.
-3. Each tester connects their own phone to their own laptop, installs Android
+1. Each tester opens their own Codespace on the shared branch/commit in VS Code
+   Desktop. Do not all edit or run Metro in one shared Codespace.
+2. Each tester connects their own phone to their own laptop, installs Android
    Platform Tools locally, authorizes USB debugging, and confirms `adb devices`
    shows their phone as `device`.
+3. Each tester builds and installs the debug APK once using the steps below.
 4. Each tester starts Metro in their own Codespace with `npm run android:dev`,
    confirms their own forwarded port 8081 is **Private**, and runs
    `adb reverse tcp:8081 tcp:8081` in their own laptop terminal.
@@ -76,12 +75,12 @@ also depends on the GitHub organization plan and policy.
    prompt to open VS Code if asked. Sign in to VS Code with the same GitHub
    account.
 4. Wait for the dev container setup to complete.
-5. In VS Code, open the **Ports** panel. Port `8081` should appear as
-   **Metro (React Native)** with **Private** visibility. The dev container
-   forwards it automatically. Do not change it to Public.
+5. In VS Code, open the **Ports** panel. Ports `8081` (**Metro**) and `8082`
+   (**Private APK download**) should appear with **Private** visibility. The
+   dev container forwards them automatically. Do not change either to Public.
 
-Because this setup adds a forwarded-port setting, rebuild an existing Codespace
-once after the change is merged: open the VS Code Command Palette and run
+Because this setup adds forwarded ports, rebuild an existing Codespace once
+after the change is merged: open the VS Code Command Palette and run
 **Codespaces: Rebuild Container**. New Codespaces get the setting automatically.
 
 > This local-ADB bridge requires VS Code Desktop so the private Codespaces port
@@ -121,18 +120,38 @@ the prompt on the phone. Keep this local laptop terminal available for the
 
 ### 4. Install the debug app once
 
-In the Codespace's remote terminal, run:
+In a Codespaces terminal, build the APK and wait for `BUILD SUCCESSFUL`:
 
 ```bash
 npm run android:build:debug
 ```
 
-Wait for `BUILD SUCCESSFUL`. In the Codespaces Explorer, find
-`android/app/build/outputs/apk/debug/app-debug.apk`, download it once to the
-laptop, transfer it to the phone, and install it. Allow installation from the
-file source when Android prompts you. Keep this debug app installed for daily
-coding; do not run `npm run android` in the Codespace, because that tries to
-install via remote `adb` and the phone is connected to the laptop instead.
+In a **second Codespaces terminal**, serve the built APK on port 8082:
+
+```bash
+npm run android:serve:apk
+```
+
+In VS Code's **Ports** panel, confirm port `8082` is forwarded and **Private**.
+Right-click it and select **Copy Local Address**. In the laptop's local
+PowerShell, set `$apkBase` to that address (the example assumes it is
+`http://127.0.0.1:8082`), then download and install the APK:
+
+```powershell
+$apkBase = "http://127.0.0.1:8082"
+Invoke-WebRequest -UseBasicParsing "$apkBase/app-debug.apk" -OutFile "$env:TEMP\app-debug.apk"
+adb install -r "$env:TEMP\app-debug.apk"
+```
+
+If **Copy Local Address** gives a different address or port, use that exact
+base address for `$apkBase`. Wait for `Success` from `adb install`. This sends
+the APK directly from the private forwarded Codespaces port to ADB on the
+laptop; no Explorer download or manual file transfer is needed. The APK is
+still downloaded once to a temporary local file before `adb` installs it.
+
+Keep the debug app installed for daily coding. Do not run `npm run android` in
+the Codespace; that command tries to install via remote `adb`, which cannot see
+the phone connected to the laptop.
 
 ### 5. Start Metro and bridge the phone to it
 
@@ -165,6 +184,17 @@ transferring another APK.
 Run `adb reverse tcp:8081 tcp:8081` again after unplugging/reconnecting the
 phone, restarting ADB, or starting a new Codespace session.
 
+If the app shows a black screen, confirm Metro responds from the laptop:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8081/status
+```
+
+It should return `packager-status:running`. If not, check VS Code Desktop's
+**Ports** panel: port `8081` must be forwarded and private, and
+`npm run android:dev` must still be running in the Codespace. Then repeat
+`adb reverse tcp:8081 tcp:8081` and reload the app.
+
 ### 6. Daily coding loop and when a rebuild is needed
 
 1. Resume the same Codespace in VS Code Desktop.
@@ -185,12 +215,10 @@ public Codespaces port access.
 
 ## Fallback: APK install without live updates
 
-If using Codespaces in a browser, not VS Code Desktop, you can still build and
-install the APK on your phone. Run `npm run android:build:debug`, then download
-`android/app/build/outputs/apk/debug/app-debug.apk` from the Codespaces
-Explorer and install it on the phone. Repeat the build/download/install only
-when you need a new native APK; this fallback does not provide per-change Fast
-Refresh.
+If using Codespaces only in a browser, without VS Code Desktop port forwarding,
+you can still build and install the APK, but you will need to download it from
+the Explorer or an Actions artifact. Browser-only Codespaces do not provide the
+local TCP bridge required for private Metro live reload.
 
 You can also download the APK from a successful GitHub Actions run: open the
 repository's **Actions** tab, select the **Android APK Build** run, then
@@ -210,6 +238,7 @@ Run these from the repository root:
 | `npm ci`                                      | Install JavaScript dependencies from the committed lockfile                |
 | `npm run start`                               | Start Metro                                                                |
 | `npm run android:build:debug`                 | Build an installable development APK without trying to connect to a device |
+| `npm run android:serve:apk`                   | Serve the built debug APK on private forwarded port 8082                   |
 | `npm run android`                             | Build, install, and launch on a device/emulator visible to `adb`           |
 | `npm run android:install:debug`               | Install an already-built debug APK using visible `adb`                     |
 | `npm run android:launch`                      | Launch the installed app using visible `adb`                               |
