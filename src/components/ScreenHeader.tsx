@@ -1,10 +1,12 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { COLORS, FONT, TOUCH_MIN } from '../theme';
+import { FONT, TOUCH_MIN, type ThemeColors } from '../theme';
+import { useThemeColors } from '../store/ThemeContext';
 
 type Props = { title: string; subtitle?: string; onBack?: () => void };
 
 export default function ScreenHeader({ title, subtitle, onBack }: Props) {
+  const styles = createStyles(useThemeColors());
   return (
     <View>
       <View style={styles.row}>
@@ -31,10 +33,11 @@ export default function ScreenHeader({ title, subtitle, onBack }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  back: { width: TOUCH_MIN, height: TOUCH_MIN, justifyContent: 'center' },
-  backGlyph: { fontSize: 34, lineHeight: 36, color: COLORS.text },
-  title: { fontSize: FONT.title, fontWeight: '700', color: COLORS.text },
-  subtitle: { textAlign: 'center', fontSize: FONT.body, color: COLORS.muted, marginTop: 4 },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    back: { width: TOUCH_MIN, height: TOUCH_MIN, justifyContent: 'center' },
+    backGlyph: { fontSize: 34, lineHeight: 36, color: colors.text },
+    title: { fontSize: FONT.title, fontWeight: '700', color: colors.text },
+    subtitle: { textAlign: 'center', fontSize: FONT.body, color: colors.muted, marginTop: 4 },
+  });

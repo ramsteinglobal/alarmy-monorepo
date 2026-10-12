@@ -1,40 +1,96 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 
-import { COLORS } from '../../theme';
+import { FONT, type ThemeColors } from '../../theme';
+import { useThemeColors } from '../../store/ThemeContext';
+import LoginWall from '../../components/LoginWall';
+import { useAuth } from '../../store/AuthContext';
+import { getAlarmHistory, type AlarmHistoryItem } from '../../storage/alarmHistory';
+import { dateKey, getHabits, setHabit } from '../../storage/sleepStorage';
+
+const HABITS = [
+  { id: 'water', icon: '💧', title: 'Drink Water', description: 'Start your morning hydrated' },
+  { id: 'stretch', icon: '🧘', title: 'Morning Stretch', description: 'Take 5 minutes to stretch' },
+  {
+    id: 'sunlight',
+    icon: '☀',
+    title: 'Get Some Sunlight',
+    description: 'Spend a few minutes outside',
+  },
+  { id: 'plan', icon: '✓', title: 'Plan Your Day', description: 'Review your priorities' },
+];
+
+const dayKeyOf = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : dateKey(d);
+};
+
+const streakOf = (history: AlarmHistoryItem[]): number => {
+  const days = new Set(
+    history
+      .filter(h => h.completed)
+      .map(h => dayKeyOf(h.completedAt))
+      .filter(Boolean),
+  );
+  if (days.size === 0) return 0;
+  const today = new Date();
+  const cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (!days.has(dateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
+  let streak = 0;
+  while (days.has(dateKey(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+};
 
 const MorningDashboardScreen = () => {
-  const habits = [
-    {
-      id: 'water',
-      icon: '💧',
-      title: 'Drink Water',
-      description: 'Start your morning hydrated',
-      completed: true,
-    },
-    {
-      id: 'stretch',
-      icon: '🧘',
-      title: 'Morning Stretch',
-      description: 'Take 5 minutes to stretch',
-      completed: false,
-    },
-    {
-      id: 'sunlight',
-      icon: '☀',
-      title: 'Get Some Sunlight',
-      description: 'Spend a few minutes outside',
-      completed: false,
-    },
-    {
-      id: 'plan',
-      icon: '✓',
-      title: 'Plan Your Day',
-      description: 'Review your priorities',
-      completed: false,
-    },
-  ];
+  const colors = useThemeColors();
+  const styles = createStyles(colors);
+  const { user } = useAuth();
+  const [history, setHistory] = useState<AlarmHistoryItem[]>([]);
+  const [habitState, setHabitState] = useState<Record<string, boolean>>({});
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      getAlarmHistory().then(h => active && setHistory(h));
+      getHabits().then(s => active && setHabitState(s));
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
+
+  if (!user) {
+    return (
+      <LoginWall
+        icon="☀"
+        title="Morning routines need an account"
+        message="Sign in free to build routines, earn streaks, and personalize your mornings."
+      />
+    );
+  }
+
+  const toggleHabit = (id: string, done: boolean) => {
+    setHabitState(cur => ({ ...cur, [id]: done }));
+    setHabit(id, done).catch(error => console.error('Failed to save habit:', error));
+  };
+
+  const last = history.find(h => h.completed) ?? null;
+  const streak = streakOf(history);
+  const doneCount = HABITS.filter(h => habitState[h.id]).length;
+  const habits = HABITS.map(h => ({ ...h, completed: !!habitState[h.id] }));
+  const greeting = 'TODAY';
+  const hour = new Date().getHours();
+  const greetingIcon = hour < 5 || hour >= 18 ? '☾' : '☀';
+
+  const reload = () => {
+    getAlarmHistory().then(setHistory);
+    getHabits().then(setHabitState);
+  };
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -42,13 +98,19 @@ const MorningDashboardScreen = () => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerSmall}>GOOD MORNING</Text>
+            <Text style={styles.headerSmall}>{greeting}</Text>
 
             <Text style={styles.headerTitle}>Morning</Text>
           </View>
 
-          <TouchableOpacity style={styles.menuButton} activeOpacity={0.7}>
-            <Text style={styles.menuText}>⋮</Text>
+          <TouchableOpacity
+            style={styles.menuButton}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Refresh morning"
+            onPress={reload}
+          >
+            <Text style={styles.menuText}>↻</Text>
           </TouchableOpacity>
         </View>
 
@@ -59,14 +121,16 @@ const MorningDashboardScreen = () => {
           {/* Greeting Card */}
           <View style={styles.greetingCard}>
             <View style={styles.greetingIcon}>
-              <Text style={styles.greetingIconText}>☀</Text>
+              <Text style={styles.greetingIconText}>{greetingIcon}</Text>
             </View>
 
             <View style={styles.greetingContent}>
               <Text style={styles.greetingTitle}>Good morning!</Text>
 
               <Text style={styles.greetingText}>
-                You completed your alarm. Great start to the day.
+                {last
+                  ? `Last wake-up ${last.alarmTime} ${last.period} — ${last.missionTitle}.`
+                  : 'Complete your first alarm to start your routine.'}
               </Text>
             </View>
           </View>
@@ -77,12 +141,14 @@ const MorningDashboardScreen = () => {
           <View style={styles.summaryCard}>
             <View style={styles.summaryMain}>
               <Text style={styles.summaryTime}>
-                7:52
-                <Text style={styles.summaryPeriod}> AM</Text>
+                {last?.alarmTime ?? '--:--'}
+                <Text style={styles.summaryPeriod}> {last?.period ?? ''}</Text>
               </Text>
 
               <View style={styles.completedBadge}>
-                <Text style={styles.completedBadgeText}>✓ COMPLETED</Text>
+                <Text style={styles.completedBadgeText}>
+                  {last ? '✓ COMPLETED' : 'NO WAKE-UPS YET'}
+                </Text>
               </View>
             </View>
 
@@ -92,19 +158,21 @@ const MorningDashboardScreen = () => {
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>MISSION</Text>
 
-                <Text style={styles.summaryValue}>Math Mission</Text>
+                <Text style={styles.summaryValue}>{last?.missionTitle ?? '—'}</Text>
               </View>
 
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>RESULT</Text>
 
-                <Text style={styles.summaryValue}>Successful</Text>
+                <Text style={styles.summaryValue}>
+                  {last ? (last.mood ? `Felt ${last.mood}` : 'Successful') : '—'}
+                </Text>
               </View>
 
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>STREAK</Text>
 
-                <Text style={styles.summaryValue}>5 days</Text>
+                <Text style={styles.summaryValue}>{streak === 1 ? '1 day' : `${streak} days`}</Text>
               </View>
             </View>
           </View>
@@ -114,20 +182,29 @@ const MorningDashboardScreen = () => {
 
           <View style={styles.scoreCard}>
             <View style={styles.scoreCircle}>
-              <Text style={styles.scoreNumber}>82</Text>
+              <Text style={styles.scoreNumber}>{streak}</Text>
 
-              <Text style={styles.scoreOutOf}>/100</Text>
+              <Text style={styles.scoreOutOf}>day streak</Text>
             </View>
 
             <View style={styles.scoreContent}>
-              <Text style={styles.scoreTitle}>Great start!</Text>
+              <Text style={styles.scoreTitle}>
+                {streak >= 5 ? 'Unstoppable!' : streak >= 2 ? 'Great start!' : 'Day one energy!'}
+              </Text>
 
               <Text style={styles.scoreDescription}>
-                You're building a consistent morning routine.
+                {history.length > 0
+                  ? "You're building a consistent morning routine."
+                  : 'Wake up with Wakely to start your streak.'}
               </Text>
 
               <View style={styles.scoreProgressBackground}>
-                <View style={styles.scoreProgress} />
+                <View
+                  style={[
+                    styles.scoreProgress,
+                    { width: `${Math.min(100, Math.round((streak / 7) * 100))}%` },
+                  ]}
+                />
               </View>
             </View>
           </View>
@@ -136,13 +213,22 @@ const MorningDashboardScreen = () => {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionHeaderTitle}>Morning Routine</Text>
 
-            <Text style={styles.routineCount}>1 / 4</Text>
+            <Text style={styles.routineCount}>
+              {doneCount} / {HABITS.length}
+            </Text>
           </View>
 
           <View style={styles.habitsCard}>
             {habits.map((habit, index) => (
               <React.Fragment key={habit.id}>
-                <TouchableOpacity style={styles.habitRow} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={styles.habitRow}
+                  activeOpacity={0.7}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: habit.completed }}
+                  accessibilityLabel={habit.title}
+                  onPress={() => toggleHabit(habit.id, !habit.completed)}
+                >
                   <View style={[styles.habitIcon, habit.completed && styles.habitIconCompleted]}>
                     <Text style={styles.habitIconText}>{habit.icon}</Text>
                   </View>
@@ -174,14 +260,16 @@ const MorningDashboardScreen = () => {
             </View>
 
             <View style={styles.streakContent}>
-              <Text style={styles.streakTitle}>5 Day Wake-Up Streak</Text>
+              <Text style={styles.streakTitle}>
+                {streak > 0 ? `${streak} Day Wake-Up Streak` : 'Start Your Streak'}
+              </Text>
 
               <Text style={styles.streakDescription}>
-                Keep going! You're creating a healthy habit.
+                {streak > 0
+                  ? "Keep going! You're creating a healthy habit."
+                  : 'Complete a morning alarm to begin.'}
               </Text>
             </View>
-
-            <Text style={styles.streakArrow}>›</Text>
           </View>
 
           {/* Tip */}
@@ -201,401 +289,397 @@ const MorningDashboardScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
 
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
 
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 15,
-  },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 15,
+    },
 
-  headerSmall: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.muted,
-    letterSpacing: 1,
-  },
+    headerSmall: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.muted,
+      letterSpacing: 1,
+    },
 
-  headerTitle: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 3,
-  },
+    headerTitle: {
+      fontSize: FONT.headline,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 3,
+    },
 
-  menuButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#F2F2F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    menuButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 21,
+      backgroundColor: colors.divider,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  menuText: {
-    fontSize: 25,
-    color: COLORS.text,
-  },
+    menuText: {
+      fontSize: 25,
+      color: colors.text,
+    },
 
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 25,
-  },
+    scrollContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 25,
+    },
 
-  greetingCard: {
-    backgroundColor: '#FFF8E8',
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+    greetingCard: {
+      backgroundColor: colors.accentSoft,
+      borderRadius: 18,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
 
-  greetingIcon: {
-    width: 45,
-    height: 45,
-    borderRadius: 23,
-    backgroundColor: '#F5E4B7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    greetingIcon: {
+      width: 45,
+      height: 45,
+      borderRadius: 23,
+      backgroundColor: colors.accentTint,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  greetingIconText: {
-    fontSize: 23,
-    color: COLORS.accent,
-  },
+    greetingIconText: {
+      fontSize: 23,
+      color: colors.accent,
+    },
 
-  greetingContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
+    greetingContent: {
+      flex: 1,
+      marginLeft: 12,
+    },
 
-  greetingTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    greetingTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  greetingText: {
-    fontSize: 12,
-    color: COLORS.muted,
-    lineHeight: 17,
-    marginTop: 3,
-  },
+    greetingText: {
+      fontSize: 12,
+      color: colors.muted,
+      lineHeight: 17,
+      marginTop: 3,
+    },
 
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 23,
-    marginBottom: 10,
-  },
+    sectionTitle: {
+      fontSize: FONT.bodyLg,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 23,
+      marginBottom: 10,
+    },
 
-  summaryCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    padding: 18,
-  },
+    summaryCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 18,
+    },
 
-  summaryMain: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+    summaryMain: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
 
-  summaryTime: {
-    fontSize: 34,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    summaryTime: {
+      fontSize: 34,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  summaryPeriod: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
+    summaryPeriod: {
+      fontSize: 13,
+      fontWeight: '700',
+    },
 
-  completedBadge: {
-    backgroundColor: '#EAF7E9',
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
+    completedBadge: {
+      backgroundColor: colors.accentSoft,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 10,
+    },
 
-  completedBadgeText: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: '#4CAF50',
-    letterSpacing: 0.6,
-  },
+    completedBadgeText: {
+      fontSize: FONT.caption,
+      fontWeight: '800',
+      color: colors.success,
+      letterSpacing: 0.6,
+    },
 
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.divider,
-    marginVertical: 15,
-  },
+    divider: {
+      height: 1,
+      backgroundColor: colors.divider,
+      marginVertical: 15,
+    },
 
-  summaryDetails: {
-    flexDirection: 'row',
-  },
+    summaryDetails: {
+      flexDirection: 'row',
+    },
 
-  summaryItem: {
-    flex: 1,
-  },
+    summaryItem: {
+      flex: 1,
+    },
 
-  summaryLabel: {
-    fontSize: 8,
-    fontWeight: '700',
-    color: COLORS.muted,
-    letterSpacing: 0.7,
-  },
+    summaryLabel: {
+      fontSize: FONT.caption,
+      fontWeight: '700',
+      color: colors.muted,
+      letterSpacing: 0.7,
+    },
 
-  summaryValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginTop: 4,
-  },
+    summaryValue: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+      marginTop: 4,
+    },
 
-  scoreCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+    scoreCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 18,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
 
-  scoreCircle: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-    borderWidth: 5,
-    borderColor: COLORS.accent,
-    backgroundColor: '#FFF8E8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
+    scoreCircle: {
+      width: 78,
+      height: 78,
+      borderRadius: 39,
+      borderWidth: 5,
+      borderColor: colors.accent,
+      backgroundColor: colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+    },
 
-  scoreNumber: {
-    fontSize: 25,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    scoreNumber: {
+      fontSize: 25,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  scoreOutOf: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 11,
-  },
+    scoreOutOf: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 11,
+    },
 
-  scoreContent: {
-    flex: 1,
-    marginLeft: 15,
-  },
+    scoreContent: {
+      flex: 1,
+      marginLeft: 15,
+    },
 
-  scoreTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    scoreTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  scoreDescription: {
-    fontSize: 12,
-    color: COLORS.muted,
-    lineHeight: 17,
-    marginTop: 4,
-  },
+    scoreDescription: {
+      fontSize: 12,
+      color: colors.muted,
+      lineHeight: 17,
+      marginTop: 4,
+    },
 
-  scoreProgressBackground: {
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: COLORS.divider,
-    marginTop: 10,
-    overflow: 'hidden',
-  },
+    scoreProgressBackground: {
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: colors.divider,
+      marginTop: 10,
+      overflow: 'hidden',
+    },
 
-  scoreProgress: {
-    width: '82%',
-    height: '100%',
-    backgroundColor: COLORS.accent,
-  },
+    scoreProgress: {
+      width: '82%',
+      height: '100%',
+      backgroundColor: colors.accent,
+    },
 
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 23,
-    marginBottom: 10,
-  },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 23,
+      marginBottom: 10,
+    },
 
-  sectionHeaderTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    sectionHeaderTitle: {
+      fontSize: FONT.bodyLg,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  routineCount: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.accent,
-  },
+    routineCount: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.accent,
+    },
 
-  habitsCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    paddingHorizontal: 15,
-  },
+    habitsCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      paddingHorizontal: 15,
+    },
 
-  habitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 13,
-  },
+    habitRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 13,
+    },
 
-  habitIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#F7F7F7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    habitIcon: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: colors.divider,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  habitIconCompleted: {
-    backgroundColor: '#FFF8E8',
-  },
+    habitIconCompleted: {
+      backgroundColor: colors.accentSoft,
+    },
 
-  habitIconText: {
-    fontSize: 17,
-  },
+    habitIconText: {
+      fontSize: 17,
+    },
 
-  habitContent: {
-    flex: 1,
-    marginLeft: 11,
-  },
+    habitContent: {
+      flex: 1,
+      marginLeft: 11,
+    },
 
-  habitTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
+    habitTitle: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+    },
 
-  habitTitleCompleted: {
-    textDecorationLine: 'line-through',
-    color: COLORS.muted,
-  },
+    habitTitleCompleted: {
+      textDecorationLine: 'line-through',
+      color: colors.muted,
+    },
 
-  habitDescription: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 3,
-  },
+    habitDescription: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 3,
+    },
 
-  checkbox: {
-    width: 23,
-    height: 23,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#D5D5D5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    checkbox: {
+      width: 23,
+      height: 23,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: colors.softBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  checkboxCompleted: {
-    borderColor: COLORS.accent,
-    backgroundColor: COLORS.accent,
-  },
+    checkboxCompleted: {
+      borderColor: colors.accent,
+      backgroundColor: colors.accent,
+    },
 
-  checkmark: {
-    color: COLORS.surface,
-    fontSize: 13,
-    fontWeight: '700',
-  },
+    checkmark: {
+      color: colors.onAccent,
+      fontSize: 13,
+      fontWeight: '700',
+    },
 
-  habitDivider: {
-    height: 1,
-    backgroundColor: COLORS.divider,
-  },
+    habitDivider: {
+      height: 1,
+      backgroundColor: colors.divider,
+    },
 
-  streakCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    padding: 15,
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+    streakCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 15,
+      marginTop: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
 
-  streakIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#FFF3E5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    streakIcon: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  streakIconText: {
-    fontSize: 20,
-  },
+    streakIconText: {
+      fontSize: 20,
+    },
 
-  streakContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
+    streakContent: {
+      flex: 1,
+      marginLeft: 12,
+    },
 
-  streakTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    streakTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  streakDescription: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 3,
-  },
+    streakDescription: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 3,
+    },
 
-  streakArrow: {
-    fontSize: 23,
-    color: COLORS.muted,
-  },
+    tipCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 16,
+      marginTop: 12,
+    },
 
-  tipCard: {
-    backgroundColor: '#F8F8F8',
-    borderRadius: 18,
-    padding: 16,
-    marginTop: 12,
-  },
+    tipLabel: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 1,
+      color: colors.accent,
+    },
 
-  tipLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: COLORS.accent,
-  },
+    tipText: {
+      fontSize: 12,
+      lineHeight: 18,
+      color: colors.muted,
+      marginTop: 7,
+    },
 
-  tipText: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: COLORS.muted,
-    marginTop: 7,
-  },
-
-  bottomSpace: {
-    height: 30,
-  },
-});
+    bottomSpace: {
+      height: 30,
+    },
+  });
 
 export default MorningDashboardScreen;

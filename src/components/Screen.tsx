@@ -1,7 +1,7 @@
 import React from 'react';
 import { StatusBar, StyleSheet, ViewStyle } from 'react-native';
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
-import { COLORS } from '../theme';
+import { useTheme } from '../store/ThemeContext';
 
 type Props = {
   children: React.ReactNode;
@@ -14,14 +14,18 @@ type Props = {
 /** Safe-area aware screen wrapper. Use instead of View / react-native SafeAreaView. */
 export default function Screen({
   children,
-  backgroundColor = COLORS.background,
+  backgroundColor,
   edges = ['top', 'bottom', 'left', 'right'],
   style,
-  lightContent = false,
+  lightContent,
 }: Props) {
+  const { colors, isDark } = useTheme();
   return (
-    <SafeAreaView edges={edges} style={[styles.fill, { backgroundColor }, style]}>
-      <StatusBar barStyle={lightContent ? 'light-content' : 'dark-content'} />
+    <SafeAreaView
+      edges={edges}
+      style={[styles.fill, { backgroundColor: backgroundColor ?? colors.background }, style]}
+    >
+      <StatusBar barStyle={lightContent || isDark ? 'light-content' : 'dark-content'} />
       {children}
     </SafeAreaView>
   );

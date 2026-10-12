@@ -1,12 +1,43 @@
 // Sounds and missions live in one place so screens only render them.
 
-export type Sound = { id: string; name: string; description: string; icon: string };
+export type Sound = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  /** Bundled tone resource (Android res/raw + iOS bundle). Absent = silent/vibrate. */
+  file?: string;
+};
 
 export const SOUNDS: Sound[] = [
-  { id: 'classic', name: 'Classic Alarm', description: 'A traditional alarm sound', icon: '🔔' },
-  { id: 'morning', name: 'Morning Rise', description: 'Soft and refreshing', icon: '☀️' },
-  { id: 'energy', name: 'Energy Boost', description: 'Loud and energetic', icon: '⚡' },
-  { id: 'nature', name: 'Nature', description: 'Peaceful natural sounds', icon: '🌿' },
+  {
+    id: 'classic',
+    name: 'Classic Alarm',
+    description: 'A traditional alarm sound',
+    icon: '🔔',
+    file: 'classic_alarm',
+  },
+  {
+    id: 'morning',
+    name: 'Morning Rise',
+    description: 'Soft and refreshing',
+    icon: '☀️',
+    file: 'morning_rise',
+  },
+  {
+    id: 'energy',
+    name: 'Energy Boost',
+    description: 'Loud and energetic',
+    icon: '⚡',
+    file: 'energy_boost',
+  },
+  {
+    id: 'nature',
+    name: 'Nature',
+    description: 'Peaceful natural sounds',
+    icon: '🌿',
+    file: 'nature',
+  },
   { id: 'vibrate', name: 'Vibration Only', description: 'Wake up silently', icon: '📳' },
 ];
 
@@ -69,6 +100,13 @@ export const MISSIONS: Mission[] = [
     description: 'Complete the required squats',
     icon: '↕',
     difficulty: 'Hard',
+  },
+  {
+    id: 'tap',
+    title: 'Tap Challenge',
+    description: 'Tap fast to prove you are awake',
+    icon: '👆',
+    difficulty: 'Easy',
   },
 ];
 

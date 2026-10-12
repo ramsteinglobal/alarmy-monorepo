@@ -1,12 +1,28 @@
 import React, { useCallback, useState } from 'react';
 
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useFocusEffect } from '@react-navigation/native';
 
-import { COLORS } from '../../theme';
+import { FONT, type ThemeColors } from '../../theme';
+import { useThemeColors } from '../../store/ThemeContext';
 import { AlarmHistoryItem, getAlarmHistory } from '../../storage/alarmHistory';
+import {
+  formatDuration,
+  getSleepGoalHours,
+  getSleepLogs,
+  type SleepLog,
+} from '../../storage/sleepStorage';
+import LoginWall from '../../components/LoginWall';
+import { useAuth } from '../../store/AuthContext';
 
 type WeekData = {
   day: string;
@@ -17,6 +33,12 @@ type WeekData = {
 const ReportDashboardScreen = () => {
   const [history, setHistory] = useState<AlarmHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([]);
+  const [sleepGoalHours, setSleepGoalHours] = useState(8);
+  const { user } = useAuth();
+  const colors = useThemeColors();
+  const styles = createStyles(colors);
 
   // ============================================================
   // LOAD HISTORY
@@ -29,9 +51,13 @@ const ReportDashboardScreen = () => {
       const data = await getAlarmHistory();
 
       setHistory(data);
+      setSleepLogs(await getSleepLogs());
+      setSleepGoalHours(await getSleepGoalHours());
+      setLoadError(false);
     } catch (error) {
       console.error('Error loading alarm history:', error);
       setHistory([]);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -200,7 +226,9 @@ const ReportDashboardScreen = () => {
   // ============================================================
 
   const getMissionStats = (missionId: string) => {
-    const missionHistory = weeklyHistory.filter(item => item.missionId === missionId);
+    const missionHistory = weeklyHistory.filter(
+      item => item.missionId === missionId || item.chainIds?.includes(missionId),
+    );
 
     const completed = missionHistory.filter(item => item.completed).length;
 
@@ -218,6 +246,43 @@ const ReportDashboardScreen = () => {
   const mathStats = getMissionStats('math');
   const typingStats = getMissionStats('typing');
   const photoStats = getMissionStats('photo');
+  const memoryStats = getMissionStats('memory');
+  const shakeStats = getMissionStats('shake');
+  const squatStats = getMissionStats('squat');
+  const barcodeStats = getMissionStats('barcode');
+  const tapStats = getMissionStats('tap');
+
+  // ============================================================
+  // SLEEP (from real sleep logs, never invented)
+  // ============================================================
+
+  const recentSleep = sleepLogs.slice(0, 7);
+  const avgSleepMinutes =
+    recentSleep.length > 0
+      ? Math.round(recentSleep.reduce((sum, l) => sum + l.durationMinutes, 0) / recentSleep.length)
+      : 0;
+  const sleepGoalMinutes = sleepGoalHours * 60;
+  const sleepGoalPct =
+    avgSleepMinutes > 0 ? Math.min(100, Math.round((avgSleepMinutes / sleepGoalMinutes) * 100)) : 0;
+
+  // ============================================================
+  // MOOD (from wake-up check-ins)
+  // ============================================================
+
+  const moodCounts = {
+    great: weeklyHistory.filter(item => item.mood === 'great').length,
+    ok: weeklyHistory.filter(item => item.mood === 'ok').length,
+    tired: weeklyHistory.filter(item => item.mood === 'tired').length,
+  };
+  const moodTotal = moodCounts.great + moodCounts.ok + moodCounts.tired;
+
+  const wokeEarly = (time: string, period: string): boolean => {
+    const [h] = time.split(':').map(n => parseInt(n, 10));
+    if (!Number.isInteger(h)) return false;
+    const hour24 = (h % 12) + (period === 'PM' ? 12 : 0);
+    return hour24 < 7;
+  };
+  const isEarlyBird = weeklyHistory.some(item => wokeEarly(item.alarmTime, item.period));
 
   // ============================================================
   // OVERALL CONSISTENCY
@@ -234,32 +299,42 @@ const ReportDashboardScreen = () => {
   const getInsight = () => {
     if (history.length === 0) {
       return {
-        title: 'Start building your wake-up routine.',
+        title: 'Start building your wake-up routine',
         text: 'Complete your first alarm mission and your progress will appear here.',
       };
     }
 
     if (currentStreak >= 5) {
       return {
-        title: 'You are building a strong routine.',
+        title: 'You are building a strong routine',
         text: `You have successfully completed alarms for ${currentStreak} consecutive days. Keep going!`,
       };
     }
 
     if (completedAlarms > 0) {
       return {
-        title: 'Good progress!',
+        title: 'Good progress',
         text: 'Keep completing your wake-up missions to build a consistent routine.',
       };
     }
 
     return {
-      title: 'Keep working on consistency.',
+      title: 'Keep working on consistency',
       text: 'Complete your scheduled missions to improve your wake-up routine.',
     };
   };
 
   const insight = getInsight();
+
+  if (!user) {
+    return (
+      <LoginWall
+        icon="▥"
+        title="Reports need an account"
+        message="Sign in free to keep your wake-up history, streaks, and progress across devices."
+      />
+    );
+  }
 
   // ============================================================
   // UI
@@ -277,8 +352,14 @@ const ReportDashboardScreen = () => {
             <Text style={styles.headerTitle}>Report</Text>
           </View>
 
-          <TouchableOpacity style={styles.menuButton} activeOpacity={0.7} onPress={loadHistory}>
-            <Text style={styles.menuText}>⋮</Text>
+          <TouchableOpacity
+            style={styles.menuButton}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Refresh report"
+            onPress={loadHistory}
+          >
+            <Text style={styles.menuText}>↻</Text>
           </TouchableOpacity>
         </View>
 
@@ -288,49 +369,70 @@ const ReportDashboardScreen = () => {
         >
           {/* Weekly Overview */}
 
-          <View style={styles.overviewCard}>
-            <View style={styles.overviewHeader}>
-              <View>
-                <Text style={styles.overviewLabel}>THIS WEEK</Text>
+          {loading ? (
+            <View style={styles.overviewCard}>
+              <ActivityIndicator color={colors.accent} />
+              <Text style={styles.overviewDescription}>Loading your progress…</Text>
+            </View>
+          ) : loadError && history.length === 0 ? (
+            <View style={styles.overviewCard}>
+              <Text style={styles.overviewTitle}>Couldn't load report</Text>
+              <Text style={styles.overviewDescription}>
+                Check your phone storage and try again.
+              </Text>
+              <TouchableOpacity style={styles.retryButton} onPress={loadHistory}>
+                <Text style={styles.retryText}>Try again</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.overviewCard}>
+              <View style={styles.overviewHeader}>
+                <View>
+                  <Text style={styles.overviewLabel}>THIS WEEK</Text>
 
-                <Text style={styles.overviewTitle}>
-                  {loading
-                    ? 'Loading progress...'
-                    : history.length > 0
-                    ? 'Great progress!'
-                    : 'Start your journey'}
-                </Text>
+                  <Text style={styles.overviewTitle}>
+                    {loading
+                      ? 'Loading progress…'
+                      : history.length > 0
+                      ? 'Great progress'
+                      : 'Start your journey'}
+                  </Text>
+                </View>
+
+                <View style={styles.scoreBadge}>
+                  <Text style={styles.scoreBadgeText}>{weeklyConsistency}%</Text>
+                </View>
               </View>
 
-              <View style={styles.scoreBadge}>
-                <Text style={styles.scoreBadgeText}>{weeklyConsistency}%</Text>
+              <Text style={styles.overviewDescription}>
+                {history.length > 0
+                  ? 'Your wake-up consistency based on completed missions.'
+                  : 'Complete an alarm mission to start tracking your progress.'}
+              </Text>
+
+              <View style={styles.progressBackground}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${weeklyConsistency}%`,
+                    },
+                  ]}
+                />
               </View>
             </View>
-
-            <Text style={styles.overviewDescription}>
-              {history.length > 0
-                ? 'Your wake-up consistency based on completed missions.'
-                : 'Complete an alarm mission to start tracking your progress.'}
-            </Text>
-
-            <View style={styles.progressBackground}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${weeklyConsistency}%`,
-                  },
-                ]}
-              />
-            </View>
-          </View>
+          )}
 
           {/* Key Stats */}
 
           <Text style={styles.sectionTitle}>Weekly Stats</Text>
 
           <View style={styles.statsGrid}>
-            <StatCard icon="◷" value="7h 32m" label="Avg. Sleep" />
+            <StatCard
+              icon="◷"
+              value={avgSleepMinutes > 0 ? formatDuration(avgSleepMinutes) : '--'}
+              label="Avg. Sleep"
+            />
 
             <StatCard icon="✓" value={`${completedAlarms} / 7`} label="Alarms Completed" />
 
@@ -389,23 +491,77 @@ const ReportDashboardScreen = () => {
           </View>
 
           <View style={styles.sleepCard}>
-            <View style={styles.sleepMain}>
-              <Text style={styles.sleepDuration}>7h 32m</Text>
+            {recentSleep.length === 0 ? (
+              <View style={styles.sleepMain}>
+                <Text style={styles.sleepDuration}>No sleep logs yet</Text>
 
-              <Text style={styles.sleepSubtitle}>average sleep duration</Text>
-            </View>
-
-            <View style={styles.sleepGoal}>
-              <View style={styles.sleepGoalCircle}>
-                <Text style={styles.sleepGoalNumber}>94</Text>
+                <Text style={styles.sleepSubtitle}>Log nights on the Sleep tab</Text>
               </View>
+            ) : (
+              <>
+                <View style={styles.sleepMain}>
+                  <Text style={styles.sleepDuration}>{formatDuration(avgSleepMinutes)}</Text>
 
-              <View>
-                <Text style={styles.sleepGoalTitle}>Goal progress</Text>
+                  <Text style={styles.sleepSubtitle}>average sleep duration</Text>
+                </View>
 
-                <Text style={styles.sleepGoalText}>94% of 8h target</Text>
-              </View>
-            </View>
+                <View style={styles.sleepGoal}>
+                  <View style={styles.sleepGoalCircle}>
+                    <Text style={styles.sleepGoalNumber}>{sleepGoalPct}</Text>
+                  </View>
+
+                  <View>
+                    <Text style={styles.sleepGoalTitle}>Goal progress</Text>
+
+                    <Text style={styles.sleepGoalText}>
+                      {sleepGoalPct}% of {sleepGoalHours}h target
+                    </Text>
+                  </View>
+                </View>
+              </>
+            )}
+          </View>
+
+          {/* Mood This Week */}
+
+          <Text style={styles.sectionTitle}>Mood This Week</Text>
+
+          <View style={styles.missionCard}>
+            {moodTotal === 0 ? (
+              <Text style={styles.moodEmpty}>
+                No check-ins yet. Rate your morning on the success screen after waking up.
+              </Text>
+            ) : (
+              <>
+                <MissionRow
+                  icon="😄"
+                  name="Great mornings"
+                  completed={String(moodCounts.great)}
+                  total={String(moodTotal)}
+                  percentage={`${Math.round((moodCounts.great / moodTotal) * 100)}%`}
+                />
+
+                <View style={styles.divider} />
+
+                <MissionRow
+                  icon="🙂"
+                  name="OK mornings"
+                  completed={String(moodCounts.ok)}
+                  total={String(moodTotal)}
+                  percentage={`${Math.round((moodCounts.ok / moodTotal) * 100)}%`}
+                />
+
+                <View style={styles.divider} />
+
+                <MissionRow
+                  icon="🥱"
+                  name="Tired mornings"
+                  completed={String(moodCounts.tired)}
+                  total={String(moodTotal)}
+                  percentage={`${Math.round((moodCounts.tired / moodTotal) * 100)}%`}
+                />
+              </>
+            )}
           </View>
 
           {/* Mission Performance */}
@@ -440,6 +596,56 @@ const ReportDashboardScreen = () => {
               total={String(photoStats.total)}
               percentage={`${photoStats.percentage}%`}
             />
+
+            <View style={styles.divider} />
+
+            <MissionRow
+              icon="◆"
+              name="Memory Mission"
+              completed={String(memoryStats.completed)}
+              total={String(memoryStats.total)}
+              percentage={`${memoryStats.percentage}%`}
+            />
+
+            <View style={styles.divider} />
+
+            <MissionRow
+              icon="↔"
+              name="Shake Mission"
+              completed={String(shakeStats.completed)}
+              total={String(shakeStats.total)}
+              percentage={`${shakeStats.percentage}%`}
+            />
+
+            <View style={styles.divider} />
+
+            <MissionRow
+              icon="↕"
+              name="Squat Mission"
+              completed={String(squatStats.completed)}
+              total={String(squatStats.total)}
+              percentage={`${squatStats.percentage}%`}
+            />
+
+            <View style={styles.divider} />
+
+            <MissionRow
+              icon="▥"
+              name="Barcode Mission"
+              completed={String(barcodeStats.completed)}
+              total={String(barcodeStats.total)}
+              percentage={`${barcodeStats.percentage}%`}
+            />
+
+            <View style={styles.divider} />
+
+            <MissionRow
+              icon="👆"
+              name="Tap Challenge"
+              completed={String(tapStats.completed)}
+              total={String(tapStats.total)}
+              percentage={`${tapStats.percentage}%`}
+            />
           </View>
 
           {/* Achievements */}
@@ -460,7 +666,7 @@ const ReportDashboardScreen = () => {
               icon="☀"
               title="Early Bird"
               description="Wake up before 7:00 AM"
-              completed={false}
+              completed={isEarlyBird}
             />
 
             <View style={styles.divider} />
@@ -501,6 +707,7 @@ type StatCardProps = {
 };
 
 const StatCard = ({ icon, value, label }: StatCardProps) => {
+  const styles = createStyles(useThemeColors());
   return (
     <View style={styles.statCard}>
       <View style={styles.statIcon}>
@@ -527,6 +734,7 @@ type MissionRowProps = {
 };
 
 const MissionRow = ({ icon, name, completed, total, percentage }: MissionRowProps) => {
+  const styles = createStyles(useThemeColors());
   return (
     <View style={styles.missionRow}>
       <View style={styles.missionIcon}>
@@ -571,6 +779,7 @@ type AchievementProps = {
 };
 
 const Achievement = ({ icon, title, description, completed }: AchievementProps) => {
+  const styles = createStyles(useThemeColors());
   return (
     <View style={[styles.achievementRow, !completed && styles.achievementDisabled]}>
       <View style={styles.achievementIcon}>
@@ -594,473 +803,493 @@ const Achievement = ({ icon, title, description, completed }: AchievementProps) 
    STYLES
 ============================================================ */
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 15,
-  },
-
-  headerSmall: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.muted,
-    letterSpacing: 1,
-  },
-
-  headerTitle: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 3,
-  },
-
-  menuButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#F2F2F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  menuText: {
-    fontSize: 25,
-    color: COLORS.text,
-  },
-
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 25,
-  },
-
-  overviewCard: {
-    backgroundColor: '#FFF8E8',
-    borderRadius: 18,
-    padding: 18,
-  },
-
-  overviewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  overviewLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    color: COLORS.muted,
-  },
-
-  overviewTitle: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 4,
-  },
-
-  scoreBadge: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: COLORS.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  scoreBadgeText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: COLORS.accent,
-  },
-
-  overviewDescription: {
-    fontSize: 12,
-    color: COLORS.muted,
-    lineHeight: 17,
-    marginTop: 9,
-  },
-
-  progressBackground: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#EADDBF',
-    overflow: 'hidden',
-    marginTop: 15,
-  },
-
-  progressFill: {
-    height: '100%',
-    backgroundColor: COLORS.accent,
-  },
-
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 23,
-    marginBottom: 10,
-  },
-
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-
-  statCard: {
-    width: '48%',
-    backgroundColor: COLORS.surface,
-    borderRadius: 17,
-    padding: 15,
-  },
-
-  statIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#FFF8E8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 9,
-  },
-
-  statIconText: {
-    fontSize: 15,
-    color: COLORS.accent,
-  },
-
-  statValue: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-
-  statLabel: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 3,
-  },
-
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 23,
-    marginBottom: 10,
-  },
-
-  sectionHeaderTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-
-  sectionAction: {
-    fontSize: 12,
-    color: COLORS.accent,
-    fontWeight: '600',
-  },
-
-  chartCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    padding: 18,
-  },
-
-  chartTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  chartValue: {
-    fontSize: 27,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-
-  chartDescription: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 2,
-  },
-
-  chartTrend: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.accent,
-  },
-
-  chart: {
-    height: 115,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    marginTop: 15,
-  },
-
-  chartColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-
-  chartBarArea: {
-    height: 82,
-    justifyContent: 'flex-end',
-  },
-
-  chartBar: {
-    width: 17,
-    borderRadius: 9,
-    backgroundColor: COLORS.accent,
-  },
-
-  chartDay: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 8,
-  },
-
-  sleepCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    padding: 18,
-  },
-
-  sleepMain: {
-    marginBottom: 18,
-  },
-
-  sleepDuration: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-
-  sleepSubtitle: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 2,
-  },
-
-  sleepGoal: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  sleepGoalCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FFF8E8',
-    borderWidth: 3,
-    borderColor: COLORS.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-
-  sleepGoalNumber: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-
-  sleepGoalTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-
-  sleepGoalText: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 3,
-  },
-
-  missionCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    paddingHorizontal: 15,
-  },
-
-  missionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-  },
-
-  missionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFF8E8',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  missionIconText: {
-    fontSize: 16,
-  },
-
-  missionContent: {
-    flex: 1,
-    marginLeft: 11,
-  },
-
-  missionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-
-  missionName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-
-  missionPercentage: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.accent,
-  },
-
-  missionProgressBackground: {
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: COLORS.divider,
-    marginTop: 7,
-    overflow: 'hidden',
-  },
-
-  missionProgress: {
-    height: '100%',
-    backgroundColor: COLORS.accent,
-    borderRadius: 3,
-  },
-
-  missionAttempts: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 4,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.divider,
-  },
-
-  achievementCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    paddingHorizontal: 15,
-  },
-
-  achievementRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 13,
-  },
-
-  achievementDisabled: {
-    opacity: 0.55,
-  },
-
-  achievementIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFF8E8',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  achievementIconText: {
-    fontSize: 18,
-  },
-
-  achievementContent: {
-    flex: 1,
-    marginLeft: 11,
-  },
-
-  achievementTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-
-  achievementDescription: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 3,
-  },
-
-  achievementCheck: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  achievementCheckDisabled: {
-    backgroundColor: COLORS.divider,
-  },
-
-  achievementCheckText: {
-    fontSize: 13,
-    color: COLORS.surface,
-    fontWeight: '700',
-  },
-
-  insightCard: {
-    backgroundColor: '#F8F8F8',
-    borderRadius: 18,
-    padding: 16,
-    marginTop: 12,
-  },
-
-  insightLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: COLORS.accent,
-  },
-
-  insightTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 6,
-  },
-
-  insightText: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: COLORS.muted,
-    marginTop: 5,
-  },
-
-  bottomSpace: {
-    height: 30,
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 15,
+    },
+
+    headerSmall: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.muted,
+      letterSpacing: 1,
+    },
+
+    headerTitle: {
+      fontSize: FONT.headline,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 3,
+    },
+
+    menuButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 21,
+      backgroundColor: colors.divider,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    menuText: {
+      fontSize: 25,
+      color: colors.text,
+    },
+
+    scrollContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 25,
+    },
+
+    overviewCard: {
+      backgroundColor: colors.accentSoft,
+      borderRadius: 18,
+      padding: 18,
+    },
+
+    overviewHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    overviewLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1,
+      color: colors.muted,
+    },
+
+    overviewTitle: {
+      fontSize: FONT.title,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 4,
+    },
+
+    scoreBadge: {
+      width: 54,
+      height: 54,
+      borderRadius: 27,
+      backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    scoreBadgeText: {
+      fontSize: FONT.body,
+      fontWeight: '800',
+      color: colors.accent,
+    },
+
+    overviewDescription: {
+      fontSize: 12,
+      color: colors.muted,
+      lineHeight: 17,
+      marginTop: 9,
+    },
+
+    retryButton: {
+      marginTop: 15,
+      alignSelf: 'flex-start',
+      minHeight: 44,
+      justifyContent: 'center',
+      paddingHorizontal: 18,
+      borderRadius: 10,
+      backgroundColor: colors.accent,
+    },
+
+    retryText: { fontSize: FONT.body, fontWeight: '700', color: colors.onAccent },
+
+    progressBackground: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.softBorder,
+      overflow: 'hidden',
+      marginTop: 15,
+    },
+
+    progressFill: {
+      height: '100%',
+      backgroundColor: colors.accent,
+    },
+
+    sectionTitle: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 23,
+      marginBottom: 10,
+    },
+
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+
+    statCard: {
+      width: '48%',
+      backgroundColor: colors.surface,
+      borderRadius: 17,
+      padding: 15,
+    },
+
+    statIcon: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 9,
+    },
+
+    statIconText: {
+      fontSize: FONT.body,
+      color: colors.accent,
+    },
+
+    statValue: {
+      fontSize: FONT.title,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    statLabel: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 3,
+    },
+
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 23,
+      marginBottom: 10,
+    },
+
+    sectionHeaderTitle: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    sectionAction: {
+      fontSize: 12,
+      color: colors.accent,
+      fontWeight: '600',
+    },
+
+    chartCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 18,
+    },
+
+    chartTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    chartValue: {
+      fontSize: FONT.headline,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    chartDescription: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 2,
+    },
+
+    chartTrend: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.accent,
+    },
+
+    chart: {
+      height: 115,
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      marginTop: 15,
+    },
+
+    chartColumn: {
+      flex: 1,
+      alignItems: 'center',
+    },
+
+    chartBarArea: {
+      height: 82,
+      justifyContent: 'flex-end',
+    },
+
+    chartBar: {
+      width: 17,
+      borderRadius: 9,
+      backgroundColor: colors.accent,
+    },
+
+    chartDay: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 8,
+    },
+
+    sleepCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 18,
+    },
+
+    sleepMain: {
+      marginBottom: 18,
+    },
+
+    sleepDuration: {
+      fontSize: FONT.headline,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    sleepSubtitle: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 2,
+    },
+
+    sleepGoal: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+
+    sleepGoalCircle: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.accentSoft,
+      borderWidth: 3,
+      borderColor: colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+
+    sleepGoalNumber: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    sleepGoalTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    sleepGoalText: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 3,
+    },
+
+    missionCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      paddingHorizontal: 15,
+    },
+
+    missionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 14,
+    },
+
+    missionIcon: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    missionIconText: {
+      fontSize: 16,
+    },
+
+    missionContent: {
+      flex: 1,
+      marginLeft: 11,
+    },
+
+    missionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+
+    missionName: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+    },
+
+    missionPercentage: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.accent,
+    },
+
+    missionProgressBackground: {
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: colors.divider,
+      marginTop: 7,
+      overflow: 'hidden',
+    },
+
+    missionProgress: {
+      height: '100%',
+      backgroundColor: colors.accent,
+      borderRadius: 3,
+    },
+
+    missionAttempts: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 4,
+    },
+
+    moodEmpty: {
+      fontSize: 12,
+      color: colors.muted,
+      lineHeight: 18,
+      paddingVertical: 14,
+    },
+
+    divider: {
+      height: 1,
+      backgroundColor: colors.divider,
+    },
+
+    achievementCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      paddingHorizontal: 15,
+    },
+
+    achievementRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 13,
+    },
+
+    achievementDisabled: {
+      opacity: 0.55,
+    },
+
+    achievementIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    achievementIconText: {
+      fontSize: 18,
+    },
+
+    achievementContent: {
+      flex: 1,
+      marginLeft: 11,
+    },
+
+    achievementTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    achievementDescription: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 3,
+    },
+
+    achievementCheck: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    achievementCheckDisabled: {
+      backgroundColor: colors.divider,
+    },
+
+    achievementCheckText: {
+      fontSize: 13,
+      color: colors.surface,
+      fontWeight: '700',
+    },
+
+    insightCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 16,
+      marginTop: 12,
+    },
+
+    insightLabel: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 1,
+      color: colors.accent,
+    },
+
+    insightTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 6,
+    },
+
+    insightText: {
+      fontSize: 12,
+      lineHeight: 18,
+      color: colors.muted,
+      marginTop: 5,
+    },
+
+    bottomSpace: {
+      height: 30,
+    },
+  });
 
 export default ReportDashboardScreen;

@@ -2,6 +2,7 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   getAuth,
+  sendPasswordResetEmail,
   signInWithCredential,
   signInWithEmailAndPassword,
   signOut,
@@ -85,6 +86,10 @@ export const signInWithGoogle = async (sleepPersona?: SleepPersona) => {
 };
 
 export const logOut = async () => signOut(firebaseAuth);
+
+export const sendPasswordReset = async (email: string) => {
+  await sendPasswordResetEmail(firebaseAuth, email);
+};
 
 export const getAuthErrorMessage = (error: unknown) => {
   const code = (error as { code?: string })?.code;

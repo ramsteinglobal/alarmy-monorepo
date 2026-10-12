@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wakely brand yellow (#D7A62A) for the cold-start cover. -->
+    <color name="wakely_yellow">#D7A62A</color>
+</resources>
