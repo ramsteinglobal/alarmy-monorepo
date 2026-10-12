@@ -4,45 +4,79 @@ import { getAlarms } from '../storage/alarmStorage';
 
 let pendingAlarmId: string | null = null;
 
-async function open(alarmId: string) {
+async function open(alarmId: string): Promise<void> {
   if (!navigationRef.isReady()) {
-    pendingAlarmId = alarmId; // flushed from NavigationContainer onReady
+    pendingAlarmId = alarmId;
     return;
   }
-  // Already ringing / in a mission: do not stack another copy.
-  const current = navigationRef.getCurrentRoute()?.name;
-  if (current === 'AlarmRinging' || current === 'MissionExecution') return;
 
-  const alarm = (await getAlarms()).find(a => a.id === alarmId);
-  navigationRef.navigate('AlarmRinging', { alarm });
+  // Avoid opening another alarm screen while an alarm or mission is active.
+  const current = navigationRef.getCurrentRoute()?.name;
+
+  if (current === 'AlarmRinging' || current === 'MissionExecution') {
+    return;
+  }
+
+  const alarm = (await getAlarms()).find(item => item.id === alarmId);
+
+  if (!alarm) {
+    console.warn(`Alarm not found: ${alarmId}`);
+    return;
+  }
+
+  // AlarmRinging is nested inside the Alarm tab navigator.
+  navigationRef.navigate('Main', {
+    screen: 'Alarm',
+    params: {
+      screen: 'AlarmRinging',
+      params: { alarm },
+    },
+  });
 }
 
-/** Call from NavigationContainer onReady. */
-export function flushPendingAlarm() {
+/** Opens a pending alarm after NavigationContainer becomes ready. */
+export function flushPendingAlarm(): void {
   if (pendingAlarmId) {
-    const id = pendingAlarmId;
+    const alarmId = pendingAlarmId;
     pendingAlarmId = null;
-    open(id);
+    void open(alarmId);
   }
 }
 
-function handle({ type, detail }: Event) {
+function handle({ type, detail }: Event): void {
   const alarmId = detail.notification?.data?.alarmId;
-  if (typeof alarmId !== 'string') return;
-  // DELIVERED = it just fired while the app is open; PRESS = user tapped it.
-  if (type === EventType.DELIVERED || type === EventType.PRESS) open(alarmId);
+
+  if (typeof alarmId !== 'string') {
+    return;
+  }
+
+  // Open the alarm when its notification is delivered or pressed.
+  if (type === EventType.DELIVERED || type === EventType.PRESS) {
+    void open(alarmId);
+  }
 }
 
-/** Foreground listener + the notification that launched the app. Returns an unsubscribe. */
-export function startAlarmEvents() {
-  notifee.getInitialNotification().then(initial => {
-    const id = initial?.notification?.data?.alarmId;
-    if (typeof id === 'string') open(id);
-  });
+/** Registers foreground events and handles the notification that launched the app. */
+export function startAlarmEvents(): () => void {
+  void notifee
+    .getInitialNotification()
+    .then(initial => {
+      const alarmId = initial?.notification?.data?.alarmId;
+
+      if (typeof alarmId === 'string') {
+        return open(alarmId);
+      }
+    })
+    .catch(error => {
+      console.warn('Failed to retrieve the initial alarm notification:', error);
+    });
+
   return notifee.onForegroundEvent(handle);
 }
 
-/** Register in index.js so taps are handled while the app is in the background. */
-export function registerBackgroundHandler() {
-  notifee.onBackgroundEvent(async event => handle(event));
+/** Registers notification handling while the app is in the background. */
+export function registerBackgroundHandler(): void {
+  notifee.onBackgroundEvent(async event => {
+    handle(event);
+  });
 }
