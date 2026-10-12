@@ -4,7 +4,6 @@
     "project_id": "alamyapp",
     "storage_bucket": "alamyapp.firebasestorage.app"
   },
-  
   "client": [
     {
       "client_info": {
@@ -20,6 +19,14 @@
           "android_info": {
             "package_name": "com.alarmyapp",
             "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "287845974246-gtcig753tq7h5ecipd8f0m6nju131of1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alarmyapp",
+            "certificate_hash": "155a3bb9ff0a229a28f2c87548ef85a49e1a589c"
           }
         },
         {
