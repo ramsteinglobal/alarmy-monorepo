@@ -7,7 +7,6 @@ import PrimaryButton from '../../components/PrimaryButton';
 import Screen from '../../components/Screen';
 import ScreenHeader from '../../components/ScreenHeader';
 import { DEFAULT_MISSION, DEFAULT_SOUND, MISSIONS, SOUNDS } from '../../data/options';
-import { promptFixPermissions, scheduleAlarm } from '../../services/alarmScheduler';
 import { addAlarm, StoredAlarm, updateAlarm } from '../../storage/alarmStorage';
 import { COLORS, FONT, RADIUS, SPACING } from '../../theme';
 import type { AlarmScreenProps } from '../../types/navigation';
@@ -57,11 +56,7 @@ export default function AlarmSummaryScreen({
       if (isEditing) await updateAlarm(alarmData);
       else await addAlarm(alarmData);
 
-      const scheduled = await scheduleAlarm(alarmData);
-
       navigation.reset({ index: 0, routes: [{ name: 'AlarmDashboard' }] });
-      // Saved either way; if Android refused to schedule, tell the user how to fix it.
-      if (!scheduled.ok) promptFixPermissions(scheduled);
     } catch (error) {
       console.error('Error saving alarm:', error);
       Alert.alert('Could not save alarm', 'Please try again.');
@@ -70,8 +65,12 @@ export default function AlarmSummaryScreen({
   };
 
   const buttonLabel = saving
-    ? isEditing ? 'Updating Alarm...' : 'Saving Alarm...'
-    : isEditing ? 'Update Alarm →' : 'Save Alarm →';
+    ? isEditing
+      ? 'Updating Alarm...'
+      : 'Saving Alarm...'
+    : isEditing
+    ? 'Update Alarm →'
+    : 'Save Alarm →';
 
   return (
     <Screen>
@@ -86,7 +85,8 @@ export default function AlarmSummaryScreen({
           <Text style={styles.cardLabel}>ALARM TIME</Text>
           <Text
             style={styles.time}
-            accessibilityLabel={`${draft.hour}:${minute} ${draft.period}, ${daysText}`}>
+            accessibilityLabel={`${draft.hour}:${minute} ${draft.period}, ${daysText}`}
+          >
             {draft.hour}:{minute}
             <Text style={styles.period}> {draft.period}</Text>
           </Text>
@@ -94,8 +94,18 @@ export default function AlarmSummaryScreen({
         </Card>
 
         <Card style={styles.detailsCard}>
-          <InfoRow icon={soundIcon} label="ALARM SOUND" value={sound.name} description={sound.description} />
-          <InfoRow icon={missionIcon} label="WAKE-UP MISSION" value={mission.title} description={mission.description} />
+          <InfoRow
+            icon={soundIcon}
+            label="ALARM SOUND"
+            value={sound.name}
+            description={sound.description}
+          />
+          <InfoRow
+            icon={missionIcon}
+            label="WAKE-UP MISSION"
+            value={mission.title}
+            description={mission.description}
+          />
         </Card>
 
         <Card style={styles.statusCard}>
@@ -114,7 +124,12 @@ export default function AlarmSummaryScreen({
 
         <View style={styles.actions}>
           <PrimaryButton label={buttonLabel} variant="dark" loading={saving} onPress={handleSave} />
-          <PrimaryButton label="Back" variant="ghost" disabled={saving} onPress={navigation.goBack} />
+          <PrimaryButton
+            label="Back"
+            variant="ghost"
+            disabled={saving}
+            onPress={navigation.goBack}
+          />
         </View>
       </ScrollView>
     </Screen>
