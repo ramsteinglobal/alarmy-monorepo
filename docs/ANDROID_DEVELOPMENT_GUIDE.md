@@ -51,6 +51,10 @@ USB. The port is private and does not need to be made public.
    **Metro (React Native)** with **Private** visibility. The dev container
    forwards it automatically. Do not change it to Public.
 
+Because this setup adds a forwarded-port setting, rebuild an existing Codespace
+once after the change is merged: open the VS Code Command Palette and run
+**Codespaces: Rebuild Container**. New Codespaces get the setting automatically.
+
 > This local-ADB bridge requires VS Code Desktop so the private Codespaces port
 > is also available on the laptop as a local TCP port. Opening the Codespace
 > only in a browser does not create that localhost TCP endpoint. Browser-only
