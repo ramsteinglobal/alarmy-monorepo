@@ -285,10 +285,15 @@ production key.
 ## What the automated APK workflow does
 
 The **Android APK Build** workflow runs for pull requests, pushes to `main`,
-and manual dispatch. It installs dependencies, runs lint, typecheck, and Jest,
-builds a debug APK, checks that it exists and is non-empty, and uploads the
+and manual dispatch. Docs-only, backend-only, and iOS-only changes skip it.
+It runs two jobs in parallel:
+quality (lint, typecheck, Jest) and the debug APK build. Stale runs cancel
+automatically when new commits land. The APK is built for
+`arm64` phones only (faster builds, smaller download — matching our physical
+test phones), checks that it exists and is non-empty, and uploads the
 `wakely-debug-apk` artifact. It does not require production signing credentials
-and does not launch the APK on an emulator.
+and does not launch the APK on an emulator. Gradle dependency caching keeps
+repeat builds fast after the first run.
 
 To find an artifact, open the repository's **Actions** tab, select a successful
 workflow run, and download the artifact before its retention period expires.
