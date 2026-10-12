@@ -7,12 +7,12 @@ laptop only needs VS Code Desktop and the small Android Platform Tools package
 
 ## Choose how you want to test
 
-| Goal | Recommended route | What you need |
-| --- | --- | --- |
+| Goal                                             | Recommended route                                                                                    | What you need                                                                      |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | Code in Codespaces and see JS changes on a phone | Open the Codespace in VS Code Desktop, forward Metro privately, and use local `adb reverse` over USB | GitHub access, Codespaces, VS Code Desktop, Android phone, small local `adb` tools |
-| Install and try the app without live updates | Build APK in Codespaces; download and install it on a phone | GitHub access, Codespaces, Android phone |
-| Get an APK without building yourself | Download the APK artifact from a successful GitHub Actions run | GitHub access, Android phone |
-| Test using a browser-based emulator | Use an externally provided cloud device service | A vendor account/service; availability and cost vary |
+| Install and try the app without live updates     | Build APK in Codespaces; download and install it on a phone                                          | GitHub access, Codespaces, Android phone                                           |
+| Get an APK without building yourself             | Download the APK artifact from a successful GitHub Actions run                                       | GitHub access, Android phone                                                       |
+| Test using a browser-based emulator              | Use an externally provided cloud device service                                                      | A vendor account/service; availability and cost vary                               |
 
 An APK is an Android install package. It does not run in a normal laptop browser.
 
@@ -38,6 +38,35 @@ This setup keeps source editing, Metro, and Android builds on the Codespace.
 VS Code Desktop securely forwards Metro's private port to localhost on the
 laptop; `adb reverse` then lets the phone reach that local forwarded port over
 USB. The port is private and does not need to be made public.
+
+### When several teammates want to test
+
+Give each tester their **own Codespace**, opened in VS Code Desktop, and their
+own USB-connected phone. Each Codespace has its own private Metro server and
+private port forward. Everyone can install the same debug APK once, but each
+phone should connect only to the Metro server in that tester's own Codespace.
+
+1. A maintainer builds one debug APK from the commit the team wants to test and
+   makes it available as the private GitHub Actions `alarmy-debug-apk` artifact
+   (or shares the APK through another team-approved private channel). Testers
+   download and install it once. The APK must come from a trusted team build.
+2. Each tester opens their own Codespace on that same commit or branch in VS
+   Code Desktop. Do not all edit or run Metro in one shared Codespace.
+3. Each tester connects their own phone to their own laptop, installs Android
+   Platform Tools locally, authorizes USB debugging, and confirms `adb devices`
+   shows their phone as `device`.
+4. Each tester starts Metro in their own Codespace with `npm run android:dev`,
+   confirms their own forwarded port 8081 is **Private**, and runs
+   `adb reverse tcp:8081 tcp:8081` in their own laptop terminal.
+5. Each tester opens/reloads the already-installed app. Their phone receives
+   JS/TS updates from that tester's Codespace as they code.
+
+Each tester's Codespace has separate compute and storage usage, so five or six
+simultaneous testers use five or six Codespaces. Stop Codespaces when they are
+not in use to avoid consuming unnecessary hours. Do not expose Metro as a
+**Public** port for teammates: Metro is a development server, not an
+authenticated shared test service. Organization port sharing availability
+also depends on the GitHub organization plan and policy.
 
 ### 1. Open the Codespace in VS Code Desktop
 
@@ -176,18 +205,18 @@ control or chat.
 
 Run these from the repository root:
 
-| Command | Purpose |
-| --- | --- |
-| `npm ci` | Install JavaScript dependencies from the committed lockfile |
-| `npm run start` | Start Metro |
-| `npm run android:build:debug` | Build an installable development APK without trying to connect to a device |
-| `npm run android` | Build, install, and launch on a device/emulator visible to `adb` |
-| `npm run android:install:debug` | Install an already-built debug APK using visible `adb` |
-| `npm run android:launch` | Launch the installed app using visible `adb` |
-| `npm run android:build:release` | Build an unsigned release APK; not ready for production distribution |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run the TypeScript check |
-| `npm test -- --passWithNoTests --watch=false` | Run Jest tests once |
+| Command                                       | Purpose                                                                    |
+| --------------------------------------------- | -------------------------------------------------------------------------- |
+| `npm ci`                                      | Install JavaScript dependencies from the committed lockfile                |
+| `npm run start`                               | Start Metro                                                                |
+| `npm run android:build:debug`                 | Build an installable development APK without trying to connect to a device |
+| `npm run android`                             | Build, install, and launch on a device/emulator visible to `adb`           |
+| `npm run android:install:debug`               | Install an already-built debug APK using visible `adb`                     |
+| `npm run android:launch`                      | Launch the installed app using visible `adb`                               |
+| `npm run android:build:release`               | Build an unsigned release APK; not ready for production distribution       |
+| `npm run lint`                                | Run ESLint                                                                 |
+| `npm run typecheck`                           | Run the TypeScript check                                                   |
+| `npm test -- --passWithNoTests --watch=false` | Run Jest tests once                                                        |
 
 The release build output is
 `android/app/build/outputs/apk/release/app-release-unsigned.apk`. It is
