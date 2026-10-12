@@ -16,8 +16,11 @@ Codespace:
 npm run android:build:debug
 ```
 
-Download `android/app/build/outputs/apk/debug/app-debug.apk` from the Codespaces
-Explorer and install it on your phone.
+In VS Code Desktop, forward private port `8082` and run
+`npm run android:serve:apk` in another Codespaces terminal. From laptop
+PowerShell, fetch and install the APK with `adb`; see the complete guide for
+the exact commands. For daily JavaScript/TypeScript edits, use private Metro
+port `8081` and Fast Refresh instead of reinstalling the APK.
 
 See the [complete Android development guide](docs/ANDROID_DEVELOPMENT_GUIDE.md)
 for the step-by-step Codespaces-to-phone live-reload setup, APK installation,

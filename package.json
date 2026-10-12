@@ -6,6 +6,7 @@
     "android": "react-native run-android",
     "android:dev": "react-native start --host 0.0.0.0",
     "android:build:debug": "cd android && ./gradlew assembleDebug",
+    "android:serve:apk": "python3 -m http.server 8082 --bind 0.0.0.0 --directory android/app/build/outputs/apk/debug",
     "android:build:release": "cd android && ./gradlew assembleRelease",
     "android:clean": "cd android && ./gradlew clean",
     "android:install:debug": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
