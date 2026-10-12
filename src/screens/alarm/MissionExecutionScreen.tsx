@@ -17,6 +17,7 @@ export default function MissionExecutionScreen({
   route,
 }: AlarmScreenProps<'MissionExecution'>) {
   const alarm = route.params?.alarm;
+  const startedAt = route.params?.startedAt;
   const missionId = alarm?.mission?.id ?? 'math';
 
   const [progress, setProgress] = useState(0);
@@ -32,8 +33,8 @@ export default function MissionExecutionScreen({
     done.current = true;
     setCompleted(true);
     setProgress(1);
-    navigation.replace('AlarmSuccess', { alarm });
-  }, [alarm, navigation]);
+    navigation.replace('AlarmSuccess', { alarm, startedAt });
+  }, [alarm, navigation, startedAt]);
 
   const renderMission = () => {
     switch (missionId) {

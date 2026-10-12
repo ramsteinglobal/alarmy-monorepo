@@ -22,9 +22,9 @@ export type AlarmStackParamList = {
   SelectSound: { alarm: AlarmDraft };
   SelectMission: { alarm: AlarmDraft };
   AlarmSummary: { alarm: AlarmDraft; mission?: StoredAlarm['mission'] };
-  AlarmRinging: { alarm?: StoredAlarm } | undefined;
-  MissionExecution: { alarm?: StoredAlarm };
-  AlarmSuccess: { alarm?: StoredAlarm };
+  AlarmRinging: { alarm?: StoredAlarm; startedAt?: number } | undefined;
+  MissionExecution: { alarm?: StoredAlarm; startedAt?: number };
+  AlarmSuccess: { alarm?: StoredAlarm; startedAt?: number };
 };
 
 export type MainTabParamList = {

@@ -1,0 +1,39 @@
+{
+  "name": "Alarmy Android Build Environment",
+  "image": "ghcr.io/cirruslabs/android-sdk:35",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installMaven": false,
+      "installGradle": false
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    }
+  },
+  "containerEnv": {
+    "ANDROID_HOME": "/opt/android-sdk",
+    "ANDROID_SDK_ROOT": "/opt/android-sdk"
+  },
+  "forwardPorts": [8081],
+  "portsAttributes": {
+    "8081": {
+      "label": "Metro (React Native)",
+      "onAutoForward": "notify",
+      "visibility": "private"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup-android.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "github.vscode-github-actions",
+        "vscjava.vscode-java-pack"
+      ]
+    }
+  },
+  "remoteUser": "root"
+}

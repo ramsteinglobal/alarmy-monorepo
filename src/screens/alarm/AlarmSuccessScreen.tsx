@@ -22,6 +22,9 @@ export default function AlarmSuccessScreen({
   useEffect(() => {
     if (recorded.current) return;
     recorded.current = true;
+    const startedAt = route.params?.startedAt;
+    const durationSeconds =
+      typeof startedAt === 'number' ? Math.max(0, Math.round((Date.now() - startedAt) / 1000)) : 0;
     addAlarmHistory({
       id: Date.now().toString(),
       alarmId: alarm?.id ?? '',
@@ -31,9 +34,9 @@ export default function AlarmSuccessScreen({
       missionTitle: alarm?.mission?.title ?? 'Wake Up Mission',
       completed: true,
       completedAt: new Date().toISOString(),
-      durationSeconds: 0, // TODO: measure from ringing start to completion
+      durationSeconds,
     });
-  }, [alarm]);
+  }, [alarm, route.params?.startedAt]);
 
   const goToDashboard = () => {
     setLeaving(true);

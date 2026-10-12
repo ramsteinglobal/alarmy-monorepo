@@ -141,6 +141,9 @@ export function promptFixPermissions(result: ScheduleResult) {
       ],
     );
   } else {
-    Alert.alert('Alarm not scheduled', 'Something went wrong while scheduling this alarm. Please try again.');
+    Alert.alert(
+      'Alarm not scheduled',
+      'Something went wrong while scheduling this alarm. Please try again.',
+    );
   }
 }
