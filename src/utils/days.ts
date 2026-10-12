@@ -1,11 +1,11 @@
 const ALL_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
-/** "Every day", "Mon – Fri", "Mon · Wed" or "Once". */
+/** "Every day", "Mon – Fri", "Mon · Wed" or "No repeat". */
 export function describeDays(dayNames: string[]): string {
   if (dayNames.length === 7 && ALL_DAYS.every(d => dayNames.includes(d))) return 'Every day';
   if (dayNames.length === 5 && WEEKDAYS.every(d => dayNames.includes(d))) return 'Mon – Fri';
-  return dayNames.length > 0 ? dayNames.join(' · ') : 'Once';
+  return dayNames.length > 0 ? dayNames.join(' · ') : 'No repeat';
 }
 
 /** Day chips for the repeat-days picker. `id` is unique (two Ts, two Ss). */

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import Card from '../../components/Card';
 import PrimaryButton from '../../components/PrimaryButton';
 import Screen from '../../components/Screen';
 import ScreenHeader from '../../components/ScreenHeader';
 import TimeStepper from '../../components/TimeStepper';
-import { COLORS, FONT, RADIUS, SPACING, TOUCH_MIN } from '../../theme';
+import { useThemeColors } from '../../store/ThemeContext';
+import { FONT, RADIUS, SPACING, TOUCH_MIN, type ThemeColors } from '../../theme';
 import type { AlarmScreenProps } from '../../types/navigation';
 import {
   DAYS,
@@ -15,7 +16,9 @@ import {
   dayNamesFromIds,
   describeDays,
 } from '../../utils/days';
-import { parseStoredTime } from '../../utils/time';
+import { nextFireForDraft } from '../../utils/nextTrigger';
+import { formatTimeUntil, parseStoredTime } from '../../utils/time';
+import { getMissionChain } from '../../storage/alarmStorage';
 
 export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProps<'CreateAlarm'>) {
   const editAlarm = route.params?.editAlarm;
@@ -29,6 +32,9 @@ export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProp
   const [selectedDays, setSelectedDays] = useState<string[]>(() =>
     editAlarm ? dayIdsFromNames(editAlarm.dayNames ?? []) : DEFAULT_REPEAT_IDS,
   );
+  const [label, setLabel] = useState(editAlarm?.label ?? '');
+  const colors = useThemeColors();
+  const styles = createStyles(colors);
 
   const stepHour = (d: 1 | -1) => setHour(h => ((h - 1 + d + 12) % 12) + 1);
   const stepMinute = (d: 1 | -1) => setMinute(m => (m + d + 60) % 60);
@@ -38,6 +44,11 @@ export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProp
   const minuteText = String(minute).padStart(2, '0');
   const selectedDayNames = dayNamesFromIds(selectedDays);
   const daysText = describeDays(selectedDayNames);
+  const ringsIn = formatTimeUntil(
+    nextFireForDraft(`${hour}:${minuteText}`, period, selectedDayNames),
+  );
+
+  const setBatch = (ids: string[]) => setSelectedDays(ids);
 
   const handleContinue = () => {
     navigation.navigate('SelectSound', {
@@ -45,12 +56,19 @@ export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProp
         id: editAlarm?.id,
         sound: editAlarm?.sound,
         mission: editAlarm?.mission,
+        missions: editAlarm ? getMissionChain(editAlarm) : undefined,
+        missionConfig: editAlarm?.missionConfig,
+        snoozeMinutes: editAlarm?.snoozeMinutes,
+        maxSnoozes: editAlarm?.maxSnoozes,
+        autoDismissMinutes: editAlarm?.autoDismissMinutes,
+        wakeCheckMinutes: editAlarm?.wakeCheckMinutes,
         enabled: editAlarm?.enabled,
         hour,
         minute,
         period,
         selectedDays,
         selectedDayNames,
+        label: label.trim() ? label.trim() : undefined,
         isEditing,
       },
     });
@@ -107,7 +125,26 @@ export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProp
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Repeat Days</Text>
-            <Text style={styles.helper}>Select days</Text>
+            <Text style={styles.helper}>{daysText}</Text>
+          </View>
+          <View style={styles.batchRow}>
+            {[
+              { label: 'Weekdays', ids: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
+              { label: 'Weekend', ids: ['Sat', 'Sun'] },
+              { label: 'Every day', ids: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+              { label: 'No repeat', ids: [] as string[] },
+            ].map(batch => (
+              <TouchableOpacity
+                key={batch.label}
+                accessibilityRole="button"
+                accessibilityLabel={`Repeat ${batch.label}`}
+                onPress={() => setBatch(batch.ids)}
+                style={styles.batchHit}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.batch}>{batch.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
           <View style={styles.daysRow}>
             {DAYS.map(day => {
@@ -130,15 +167,29 @@ export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProp
           </View>
         </View>
 
+        <Card style={styles.labelCard}>
+          <Text style={styles.previewLabel}>LABEL (OPTIONAL)</Text>
+          <TextInput
+            style={styles.labelInput}
+            placeholder="Work, Gym, Meds…"
+            placeholderTextColor={colors.muted}
+            value={label}
+            onChangeText={setLabel}
+            maxLength={40}
+            accessibilityLabel="Alarm label"
+          />
+        </Card>
+
         <Card style={styles.preview}>
           <Text style={styles.previewLabel}>{isEditing ? 'EDIT PREVIEW' : 'ALARM PREVIEW'}</Text>
           <View style={styles.previewRow}>
             <Text style={styles.previewTime}>
-              {hour}:{minuteText}
+              {String(hour).padStart(2, '0')}:{minuteText}
             </Text>
             <Text style={styles.previewPeriod}>{period}</Text>
           </View>
           <Text style={styles.previewDays}>{daysText}</Text>
+          <Text style={styles.ringsIn}>Rings {ringsIn}</Text>
         </Card>
 
         <View style={styles.actions}>
@@ -150,54 +201,75 @@ export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProp
   );
 }
 
-const DAY_SIZE = 42;
+const DAY_SIZE = 44;
 
-const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingTop: SPACING.sm, paddingBottom: SPACING.xl },
-  timeCard: { marginTop: SPACING.md, alignItems: 'center' },
-  sectionTitle: { fontSize: FONT.bodyLg, fontWeight: '700', color: COLORS.text },
-  holdHint: { marginTop: 2, fontSize: FONT.caption, color: COLORS.muted },
-  timeRow: { flexDirection: 'row', alignItems: 'center', marginTop: SPACING.md },
-  colon: { fontSize: 44, fontWeight: '700', color: COLORS.text, marginHorizontal: 2 },
-  periodColumn: { marginLeft: SPACING.md, gap: 8 },
-  periodButton: {
-    minWidth: 56,
-    height: TOUCH_MIN,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.softBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  periodSelected: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
-  periodText: { fontSize: FONT.body, fontWeight: '700', color: COLORS.muted },
-  periodSelectedText: { color: COLORS.onAccent },
-  section: { marginTop: SPACING.lg },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  helper: { fontSize: FONT.caption, color: COLORS.muted },
-  daysRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: SPACING.sm },
-  dayButton: {
-    width: DAY_SIZE,
-    height: DAY_SIZE,
-    borderRadius: DAY_SIZE / 2,
-    borderWidth: 1,
-    borderColor: COLORS.softBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  daySelected: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
-  dayText: { fontSize: FONT.body, fontWeight: '700', color: COLORS.muted },
-  daySelectedText: { color: COLORS.onAccent },
-  preview: { marginTop: SPACING.lg, alignItems: 'center', backgroundColor: COLORS.card },
-  previewLabel: {
-    fontSize: FONT.caption,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    color: COLORS.muted,
-  },
-  previewRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 6 },
-  previewTime: { fontSize: 40, fontWeight: '700', color: COLORS.text },
-  previewPeriod: { marginLeft: 6, fontSize: FONT.title, fontWeight: '700', color: COLORS.accent },
-  previewDays: { marginTop: 2, fontSize: FONT.body, color: COLORS.muted },
-  actions: { marginTop: SPACING.lg, gap: SPACING.sm },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    content: { paddingHorizontal: 20, paddingTop: SPACING.sm, paddingBottom: SPACING.xl },
+    timeCard: { marginTop: SPACING.md, alignItems: 'center' },
+    sectionTitle: { fontSize: FONT.bodyLg, fontWeight: '700', color: colors.text },
+    holdHint: { marginTop: 2, fontSize: FONT.caption, color: colors.muted },
+    timeRow: { flexDirection: 'row', alignItems: 'center', marginTop: SPACING.md },
+    colon: { fontSize: 44, fontWeight: '700', color: colors.text, marginHorizontal: 2 },
+    periodColumn: { marginLeft: SPACING.md, gap: 8 },
+    periodButton: {
+      minWidth: 56,
+      height: TOUCH_MIN,
+      borderRadius: RADIUS.md,
+      borderWidth: 1,
+      borderColor: colors.softBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    periodSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
+    periodText: { fontSize: FONT.body, fontWeight: '700', color: colors.muted },
+    periodSelectedText: { color: colors.onAccent },
+    section: { marginTop: SPACING.lg },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+    },
+    helper: { fontSize: FONT.caption, color: colors.muted },
+    batchRow: { flexDirection: 'row', gap: 16, marginTop: SPACING.sm },
+    batchHit: { minHeight: 44, justifyContent: 'center' },
+    batch: { fontSize: FONT.body, fontWeight: '700', color: colors.accent },
+    daysRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: SPACING.sm },
+    dayButton: {
+      width: DAY_SIZE,
+      height: DAY_SIZE,
+      borderRadius: DAY_SIZE / 2,
+      borderWidth: 1,
+      borderColor: colors.softBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    daySelected: { backgroundColor: colors.accent, borderColor: colors.accent },
+    dayText: { fontSize: FONT.body, fontWeight: '700', color: colors.muted },
+    daySelectedText: { color: colors.onAccent },
+    preview: { marginTop: SPACING.lg, alignItems: 'center', backgroundColor: colors.card },
+    labelCard: { marginTop: SPACING.lg },
+    previewLabel: {
+      fontSize: FONT.caption,
+      fontWeight: '700',
+      letterSpacing: 1.5,
+      color: colors.muted,
+    },
+    previewRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 6 },
+    previewTime: { fontSize: 40, fontWeight: '700', color: colors.text },
+    previewPeriod: { marginLeft: 6, fontSize: FONT.title, fontWeight: '700', color: colors.accent },
+    previewDays: { marginTop: 2, fontSize: FONT.body, color: colors.muted },
+    ringsIn: { marginTop: 6, fontSize: FONT.bodyLg, fontWeight: '800', color: colors.accent },
+    labelInput: {
+      marginTop: SPACING.sm,
+      minHeight: 48,
+      borderWidth: 1,
+      borderColor: colors.softBorder,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      fontSize: FONT.bodyLg,
+      color: colors.text,
+      backgroundColor: colors.surface,
+    },
+    actions: { marginTop: SPACING.lg, gap: SPACING.sm },
+  });

@@ -15,3 +15,18 @@ export function parseStoredTime(time?: string, period?: string) {
     period: (period === 'AM' || period === 'PM' ? period : 'AM') as 'AM' | 'PM',
   };
 }
+
+/** Human countdown to a future fire time: "in 6h 20m", "in 45m", "in 1m", "ringing now". */
+export function formatTimeUntil(target: Date, now = new Date()): string {
+  const ms = target.getTime() - now.getTime();
+  if (ms <= 0) return 'ringing now';
+  const totalMinutes = Math.round(ms / 60000);
+  if (totalMinutes < 1) return 'in less than a minute';
+  if (totalMinutes < 60) return `in ${totalMinutes}m`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours < 24) return minutes === 0 ? `in ${hours}h` : `in ${hours}h ${minutes}m`;
+  const days = Math.floor(hours / 24);
+  const restHours = hours % 24;
+  return restHours === 0 ? `in ${days}d` : `in ${days}d ${restHours}h`;
+}

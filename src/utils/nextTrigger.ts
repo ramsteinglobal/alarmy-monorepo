@@ -54,3 +54,18 @@ export function buildTriggers(alarm: StoredAlarm, from = new Date()) {
     repeat: true,
   }));
 }
+
+/** Next fire time for an unsaved draft (create screen preview). */
+export function nextFireForDraft(
+  time: string,
+  period: string,
+  dayNames: string[],
+  from = new Date(),
+): Date {
+  const pair = { time, period };
+  const names = (dayNames ?? []).filter(n => n in DAY_INDEX);
+  if (names.length === 0) return nextOccurrence(pair, null, from);
+  return names
+    .map(n => nextOccurrence(pair, DAY_INDEX[n], from))
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+}

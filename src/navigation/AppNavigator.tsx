@@ -3,7 +3,8 @@ import { Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import { COLORS } from '../theme';
+import { useThemeColors } from '../store/ThemeContext';
+import { FONT } from '../theme';
 import type {
   AlarmStackParamList,
   MainTabParamList,
@@ -23,12 +24,15 @@ import AlarmSummaryScreen from '../screens/alarm/AlarmSummaryScreen';
 import AlarmRingingScreen from '../screens/alarm/AlarmRingingScreen';
 import MissionExecutionScreen from '../screens/alarm/MissionExecutionScreen';
 import AlarmSuccessScreen from '../screens/alarm/AlarmSuccessScreen';
+import WakeCheckScreen from '../screens/alarm/WakeCheckScreen';
 
 // Other modules
 import SleepDashboardScreen from '../screens/sleep/SleepDashboardScreen';
 import MorningDashboardScreen from '../screens/morning/MorningDashboardScreen';
 import ReportDashboardScreen from '../screens/report/ReportDashboardScreen';
 import SettingsDashboardScreen from '../screens/settings/SettingsDashboardScreen';
+import SplashScreen from '../screens/SplashScreen';
+import { useAuth } from '../store/AuthContext';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AlarmStack = createNativeStackNavigator<AlarmStackParamList>();
@@ -66,16 +70,19 @@ function AlarmNavigator() {
       />
 
       <AlarmStack.Screen name="AlarmSuccess" component={AlarmSuccessScreen} />
+
+      <AlarmStack.Screen name="WakeCheck" component={WakeCheckScreen} />
     </AlarmStack.Navigator>
   );
 }
 
 // TAB ICON
-function TabIcon({ text }: { text: string }) {
+function TabIcon({ text, color }: { text: string; color: string }) {
   return (
     <Text
       style={{
         fontSize: 18,
+        color,
       }}
     >
       {text}
@@ -85,22 +92,23 @@ function TabIcon({ text }: { text: string }) {
 
 // MAIN TABS
 function MainTabs() {
+  const colors = useThemeColors();
   return (
     <Tab.Navigator
       initialRouteName="Alarm"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.accent,
-        tabBarInactiveTintColor: COLORS.tabInactive,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
           height: 68,
           paddingTop: 6,
           paddingBottom: 8,
-          backgroundColor: COLORS.surface,
-          borderTopColor: COLORS.divider,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.divider,
         },
         tabBarLabelStyle: {
-          fontSize: 9,
+          fontSize: FONT.caption,
         },
       }}
     >
@@ -109,7 +117,7 @@ function MainTabs() {
         component={AlarmNavigator}
         options={{
           tabBarLabel: 'Alarm',
-          tabBarIcon: () => <TabIcon text="◷" />,
+          tabBarIcon: ({ color }) => <TabIcon text="◷" color={color} />,
         }}
       />
 
@@ -118,7 +126,7 @@ function MainTabs() {
         component={SleepDashboardScreen}
         options={{
           tabBarLabel: 'Sleep',
-          tabBarIcon: () => <TabIcon text="☾" />,
+          tabBarIcon: ({ color }) => <TabIcon text="☾" color={color} />,
         }}
       />
 
@@ -127,7 +135,7 @@ function MainTabs() {
         component={MorningDashboardScreen}
         options={{
           tabBarLabel: 'Morning',
-          tabBarIcon: () => <TabIcon text="☀" />,
+          tabBarIcon: ({ color }) => <TabIcon text="☀" color={color} />,
         }}
       />
 
@@ -136,7 +144,7 @@ function MainTabs() {
         component={ReportDashboardScreen}
         options={{
           tabBarLabel: 'Report',
-          tabBarIcon: () => <TabIcon text="▥" />,
+          tabBarIcon: ({ color }) => <TabIcon text="▥" color={color} />,
         }}
       />
 
@@ -145,7 +153,7 @@ function MainTabs() {
         component={SettingsDashboardScreen}
         options={{
           tabBarLabel: 'Settings',
-          tabBarIcon: () => <TabIcon text="⚙" />,
+          tabBarIcon: ({ color }) => <TabIcon text="⚙" color={color} />,
         }}
       />
     </Tab.Navigator>
@@ -153,17 +161,30 @@ function MainTabs() {
 }
 
 // ROOT NAVIGATOR
+// Guest-first: Main (alarms) is always open. Login/Signup are pushed on top
+// when a locked tab or Settings asks for an account. logged-in users still
+// land straight on the Alarm Dashboard after the Splash.
 export default function AppNavigator() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return <SplashScreen />;
+  }
+
   return (
     <RootStack.Navigator
-      initialRouteName="Login"
+      initialRouteName="Main"
       screenOptions={{
         headerShown: false,
       }}
     >
-      <RootStack.Screen name="Login" component={LoginScreen} />
-      <RootStack.Screen name="Signup" component={SignupScreen} />
       <RootStack.Screen name="Main" component={MainTabs} />
+      <RootStack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal' }} />
+      <RootStack.Screen
+        name="Signup"
+        component={SignupScreen}
+        options={{ presentation: 'modal' }}
+      />
     </RootStack.Navigator>
   );
 }

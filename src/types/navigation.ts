@@ -10,8 +10,15 @@ export type AlarmDraft = {
   period: 'AM' | 'PM';
   selectedDays: string[];
   selectedDayNames: string[];
+  label?: string;
   sound?: StoredAlarm['sound'];
   mission?: StoredAlarm['mission'];
+  missions?: StoredAlarm['mission'][];
+  missionConfig?: StoredAlarm['missionConfig'];
+  snoozeMinutes?: number;
+  maxSnoozes?: number;
+  autoDismissMinutes?: number;
+  wakeCheckMinutes?: number;
   enabled?: boolean;
   isEditing: boolean;
 };
@@ -22,9 +29,15 @@ export type AlarmStackParamList = {
   SelectSound: { alarm: AlarmDraft };
   SelectMission: { alarm: AlarmDraft };
   AlarmSummary: { alarm: AlarmDraft; mission?: StoredAlarm['mission'] };
-  AlarmRinging: { alarm?: StoredAlarm; startedAt?: number } | undefined;
-  MissionExecution: { alarm?: StoredAlarm; startedAt?: number };
-  AlarmSuccess: { alarm?: StoredAlarm; startedAt?: number };
+  AlarmRinging: { alarm?: StoredAlarm; startedAt?: number; snoozeCount?: number } | undefined;
+  MissionExecution: {
+    alarm?: StoredAlarm;
+    startedAt?: number;
+    snoozeCount?: number;
+    preview?: boolean;
+  };
+  AlarmSuccess: { alarm?: StoredAlarm; startedAt?: number; snoozeCount?: number };
+  WakeCheck: { alarm?: StoredAlarm };
 };
 
 export type MainTabParamList = {

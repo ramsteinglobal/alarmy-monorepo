@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { COLORS, FONT, RADIUS } from '../theme';
+import { FONT, RADIUS, type ThemeColors } from '../theme';
+import { useThemeColors } from '../store/ThemeContext';
 
 type Props = {
   icon: string;
@@ -13,6 +14,7 @@ type Props = {
 
 /** One selectable row in a single-choice list (sounds, missions). */
 export default function OptionRow({ icon, title, description, selected, onPress, badge }: Props) {
+  const styles = createStyles(useThemeColors());
   return (
     <TouchableOpacity
       accessibilityRole="radio"
@@ -39,43 +41,44 @@ export default function OptionRow({ icon, title, description, selected, onPress,
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 64,
-    padding: 14,
-    marginBottom: 10,
-    borderRadius: RADIUS.md + 2,
-    borderWidth: 1,
-    borderColor: COLORS.softBorder,
-    backgroundColor: COLORS.surface,
-  },
-  cardSelected: { borderColor: COLORS.accent, backgroundColor: COLORS.accentSoft },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.iconBg,
-  },
-  iconBoxSelected: { backgroundColor: COLORS.accentTint },
-  icon: { fontSize: 20, color: COLORS.accent },
-  info: { flex: 1 },
-  title: { fontSize: FONT.bodyLg, fontWeight: '700', color: COLORS.text },
-  description: { marginTop: 2, fontSize: FONT.caption, color: COLORS.muted },
-  badge: { marginTop: 4, fontSize: FONT.caption, fontWeight: '700' },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: COLORS.softBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioSelected: { borderColor: COLORS.accent },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.accent },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      minHeight: 64,
+      padding: 14,
+      marginBottom: 10,
+      borderRadius: RADIUS.md + 2,
+      borderWidth: 1,
+      borderColor: colors.softBorder,
+      backgroundColor: colors.surface,
+    },
+    cardSelected: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
+    iconBox: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      marginRight: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.iconBg,
+    },
+    iconBoxSelected: { backgroundColor: colors.accentTint },
+    icon: { fontSize: 20, color: colors.accent },
+    info: { flex: 1 },
+    title: { fontSize: FONT.bodyLg, fontWeight: '700', color: colors.text },
+    description: { marginTop: 2, fontSize: FONT.caption, color: colors.muted },
+    badge: { marginTop: 4, fontSize: FONT.caption, fontWeight: '700' },
+    radio: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 2,
+      borderColor: colors.softBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    radioSelected: { borderColor: colors.accent },
+    radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accent },
+  });

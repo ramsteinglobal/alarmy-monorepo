@@ -1,4 +1,4 @@
-# Alarmy
+# Wakely
 
 ## Android: build, install, and test
 

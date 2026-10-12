@@ -1,4 +1,4 @@
-# Alarmy Android: build, install, and test
+# Wakely Android: build, install, and test
 
 This guide shows teammates how to keep the Android build and Metro running in
 GitHub Codespaces while using a physical Android phone for live testing. The
@@ -15,6 +15,35 @@ laptop only needs VS Code Desktop and the small Android Platform Tools package
 | Test using a browser-based emulator                  | Use an externally provided cloud device service                                                 | A vendor account/service; availability and cost vary                               |
 
 An APK is an Android install package. It does not run in a normal laptop browser.
+
+## After pulling new code: do you need a fresh install?
+
+The daily Metro loop (step 6) only delivers JavaScript/TypeScript. You **must**
+rebuild and reinstall the debug APK once when the update touches the native
+layer. After this merge, that means **everyone reinstalls once**, because it
+adds:
+
+- new native libraries (`react-native-sensors`, `react-native-image-picker`),
+- new Android permissions, activity theme, and deep-link filter (`AndroidManifest.xml`,
+  `MainActivity.kt`),
+- bundled alarm tones (`res/raw`), splash drawable/colors, and the Wakely app icon,
+- iOS bundle sounds/icons/plist/project changes (Mac teammates: run
+  `pod install` in `ios/` and rebuild).
+
+One-time refresh after `git pull`:
+
+```bash
+npm ci
+npm run android:build:debug
+```
+
+Then reinstall with `adb install -r` (same command as step 4, keeps your data;
+stored alarms migrate automatically). After that one reinstall, the old daily
+loop works exactly as before — JS edits refresh from Metro with no new APK.
+
+If you skip the reinstall, the old APK keeps working for old features, but new
+native features (shake sensor, camera missions, bundled tones, new icon, splash
+theme, new permissions) will be missing or broken.
 
 ## Project requirements
 
@@ -175,7 +204,7 @@ Codespace. If VS Code shows a different **local** forwarded port because 8081
 is already in use, replace the second `8081` with that local port, for example
 `adb reverse tcp:8081 tcp:8082`.
 
-Open AlarmyApp on the phone, open the React Native Dev Menu (shake the phone),
+Open Wakely on the phone, open the React Native Dev Menu (shake the phone),
 and choose **Reload** if it does not load the Metro bundle automatically. Keep
 Metro running. Enable **Fast Refresh** from the Dev Menu; saved JavaScript and
 TypeScript changes will then appear on the phone without rebuilding or
@@ -222,7 +251,7 @@ local TCP bridge required for private Metro live reload.
 
 You can also download the APK from a successful GitHub Actions run: open the
 repository's **Actions** tab, select the **Android APK Build** run, then
-download the `alarmy-debug-apk` artifact.
+download the `wakely-debug-apk` artifact.
 
 This project sets minimum Android API 24 (Android 7.0). Login and cloud-backed
 features may require Firebase services and valid test credentials; use
@@ -258,7 +287,7 @@ production key.
 The **Android APK Build** workflow runs for pull requests, pushes to `main`,
 and manual dispatch. It installs dependencies, runs lint, typecheck, and Jest,
 builds a debug APK, checks that it exists and is non-empty, and uploads the
-`alarmy-debug-apk` artifact. It does not require production signing credentials
+`wakely-debug-apk` artifact. It does not require production signing credentials
 and does not launch the APK on an emulator.
 
 To find an artifact, open the repository's **Actions** tab, select a successful
@@ -290,6 +319,23 @@ build with `npm run android:build:debug` and install the APK manually.
 Gradle downloads dependencies and compiles native code on the first build.
 Messages about a slow copy or a task marked `IDLE` do not necessarily mean it
 has failed. Wait for `BUILD SUCCESSFUL` or an explicit `BUILD FAILED`.
+
+### `BUILD FAILED` after pulling new native dependencies
+
+This merge adds native libraries (`react-native-sensors`,
+`react-native-image-picker`) plus bundled sounds, icons, manifest, and theme
+changes. A build against stale `node_modules` or a stale Gradle cache fails.
+Fix it in order:
+
+```bash
+npm ci
+cd android && ./gradlew clean && cd ..
+npm run android:build:debug
+```
+
+Then reinstall with `adb install -r` as in step 4. If it still fails, paste the
+first `error:` block from the Gradle output when asking for help — the tail of
+the log is usually just a summary.
 
 ### `adb devices` shows `unauthorized` or no device
 
