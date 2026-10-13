@@ -10,6 +10,20 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Which APK to build (same modes as local npm scripts)'
+        required: false
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+          - both
+      arch:
+        description: 'ABI filter (same --arch as scripts/build-apk.mjs; "all" = every ABI)'
+        required: false
+        default: 'arm64-v8a'
 
 permissions:
   contents: read
@@ -18,9 +32,15 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Single source of truth defaults — same values scripts/build-apk.mjs uses locally.
+  # `inputs.*` is empty on pull_request/push, so `||` falls back to the default.
+  APK_ARCH: ${{ inputs.arch || 'arm64-v8a' }}
+  APK_REQUESTED_MODE: ${{ inputs.mode || 'debug' }}
+
 jobs:
   quality:
-    name: Lint, typecheck and tests
+    name: Lint, typecheck, tests and backend
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -37,16 +57,13 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Run JavaScript lint and type checks
-        run: |
-          npm run lint
-          npm run typecheck
+      # SAME checks as local `npm run verify` (lint + format + typecheck +
+      # jest + backend install/build). One command = no local/CI drift.
+      - name: Run all checks and backend build (same as local `npm run verify`)
+        run: npm run verify
 
-      - name: Run tests if they exist
-        run: npm test -- --passWithNoTests --watch=false
-
-  android-debug-apk:
-    name: Build Android debug APK
+  android-apk:
+    name: Build Android APK (same script as local)
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -94,27 +111,45 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Build debug APK (arm64 only, physical test phones)
+      # IMPORTANT: this is the SAME script local devs run
+      # (`npm run android:build:debug` → node scripts/build-apk.mjs).
+      # No raw `./gradlew` here, so flags/arch can never drift again.
+      - name: Build APK(s) with shared script
         shell: bash
         run: |
           set -euo pipefail
-          cd android
-          ./gradlew --no-daemon --stacktrace assembleDebug -PreactNativeArchitectures=arm64-v8a
-
-      - name: Verify APK exists and is non-empty
-        shell: bash
-        run: |
-          set -euo pipefail
-          APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
-          if [ ! -f "$APK_PATH" ] || [ ! -s "$APK_PATH" ]; then
-            echo "Expected APK build output was not created at $APK_PATH" >&2
-            exit 1
+          MODE="${APK_REQUESTED_MODE:-debug}"
+          echo "Requested mode: $MODE (arch: ${APK_ARCH:-arm64-v8a})"
+          if [ "$MODE" = "both" ]; then
+            npm run android:build:debug
+            npm run android:build:release
+          elif [ "$MODE" = "release" ]; then
+            npm run android:build:release
+          else
+            npm run android:build:debug
           fi
-          ls -lh "$APK_PATH"
 
-      - name: Upload APK artifact
+      - name: List built APK(s)
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -lh android/app/build/outputs/apk/debug/ 2>/dev/null || true
+          ls -lh android/app/build/outputs/apk/release/ 2>/dev/null || true
+
+      - name: Upload debug APK artifact
+        # `== ''` covers non-dispatch events where the input context is empty,
+        # so push/PR runs always upload the debug APK.
+        if: env.APK_REQUESTED_MODE == 'debug' || env.APK_REQUESTED_MODE == 'both' || env.APK_REQUESTED_MODE == ''
         uses: actions/upload-artifact@v4
         with:
           name: wakely-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - name: Upload release APK artifact
+        if: env.APK_REQUESTED_MODE == 'release' || env.APK_REQUESTED_MODE == 'both'
+        uses: actions/upload-artifact@v4
+        with:
+          name: wakely-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
