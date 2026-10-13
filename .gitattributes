@@ -1,5 +1,1 @@
 * text=auto eol=lf
-# Gradle wrapper must keep Unix line endings; Windows batch files need CRLF.
-# Without this, `* eol=lf` corrupts gradlew.bat and the APK build fails.
-/android/gradlew text eol=lf
-*.bat text eol=crlf
