@@ -32,8 +32,6 @@ For iOS, run `npm run ios` on macOS with Xcode installed.
 
 ```bash
 npm run start
-npm run android:build:debug
-npm run lint
-npm run typecheck
-npm test -- --passWithNoTests --watch=false
+npm run verify     # lint + format + typecheck + tests + backend build (same as CI)
+npm run ci:local   # verify + debug APK build (full local reproduction of CI)
 ```

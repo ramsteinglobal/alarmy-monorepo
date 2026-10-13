@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
@@ -19,8 +20,11 @@ import { useTheme, useThemeColors } from '../../store/ThemeContext';
 import { firebaseAuth, getAuthErrorMessage, logOut } from '../../config/firebaseSetup';
 import {
   getAlarmReliabilityStatus,
+  needsFullScreenIntentRow,
+  openAutostartSettings,
   openBatterySettings,
   openExactAlarmSettings,
+  openFullScreenIntentSettings,
   openSystemNotificationSettings,
   type ReliabilityStatus,
 } from '../../services/permissionsService';
@@ -205,7 +209,7 @@ export default function SettingsDashboardScreen() {
   const showHelp = () => {
     Alert.alert(
       'Help & Support',
-      'Alarms not ringing?\n\n1. Settings → Alarm Reliability: all rows should say ON.\n2. Keep Wakely open in recent apps (lock it on Xiaomi/Oppo/Vivo).\n3. Disable battery optimization for Wakely.\n4. Test with an alarm 1 minute away.',
+      'Alarms not ringing?\n\n1. Settings → Alarm Reliability: all rows should say ON.\n2. On Android 14+, allow "Pop-up over lock screen".\n3. On Xiaomi/Oppo/Vivo, enable "Autostart" (FIX row) and lock Wakely in recent apps.\n4. Disable battery optimization for Wakely.\n5. Test with an alarm 1 minute away.',
     );
   };
 
@@ -421,6 +425,40 @@ export default function SettingsDashboardScreen() {
             }
             onFix={openBatterySettings}
           />
+
+          {Platform.OS === 'android' && needsFullScreenIntentRow() ? (
+            <>
+              <View style={styles.divider} />
+
+              <ReliabilityRow
+                title="Pop-up over lock screen"
+                subtitle="Android 14+ needs this to show the alarm — tap CHECK to allow"
+                state="unknown"
+                onFix={() => {
+                  openFullScreenIntentSettings().catch(error =>
+                    console.error('Failed to open full-screen settings:', error),
+                  );
+                }}
+              />
+            </>
+          ) : null}
+
+          {Platform.OS === 'android' && reliability?.autostartNeeded ? (
+            <>
+              <View style={styles.divider} />
+
+              <ReliabilityRow
+                title="Autostart"
+                subtitle="Lets alarms fire after reboot and in background — tap FIX"
+                state="denied"
+                onFix={() => {
+                  openAutostartSettings().catch(error =>
+                    console.error('Failed to open autostart settings:', error),
+                  );
+                }}
+              />
+            </>
+          ) : null}
         </View>
 
         {/* Notifications */}
@@ -583,6 +621,9 @@ function ReliabilityRow({
 }) {
   const styles = createStyles(useThemeColors());
   const label = state === 'granted' ? 'ON' : state === 'denied' ? 'FIX' : 'CHECK';
+  // CHECK rows (e.g. full-screen overlay, whose OS state can't be read from
+  // JS) are actionable too — only a confirmed ON row is inert.
+  const actionable = state !== 'granted';
   return (
     <View style={styles.row}>
       <View style={styles.rowContent}>
@@ -597,8 +638,8 @@ function ReliabilityRow({
           state === 'granted' && styles.stateBadgeOk,
           state === 'denied' && styles.stateBadgeFix,
         ]}
-        onPress={state === 'denied' ? onFix : undefined}
-        disabled={state !== 'denied'}
+        onPress={actionable ? onFix : undefined}
+        disabled={!actionable}
         activeOpacity={0.7}
       >
         <Text
