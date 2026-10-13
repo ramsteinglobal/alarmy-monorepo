@@ -35,9 +35,7 @@ export default function PhotoCaptureMission({ kind, onComplete }: Props) {
         Platform.OS === 'android' &&
         !(await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA))
       ) {
-        const permission = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-        );
+        const permission = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
         if (permission !== PermissionsAndroid.RESULTS.GRANTED) {
           setError('Camera access is off. Turn it on to finish this mission.');
           return;

@@ -15,10 +15,7 @@ import { useTheme, useThemeColors } from '../../store/ThemeContext';
 import { FONT, RADIUS, SPACING, type ThemeColors } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
 
-export default function AlarmSuccessScreen({
-  navigation,
-  route,
-}: RootScreenProps<'AlarmSuccess'>) {
+export default function AlarmSuccessScreen({ navigation, route }: RootScreenProps<'AlarmSuccess'>) {
   const alarm = route.params?.alarm;
   const [leaving, setLeaving] = useState(false);
   const [mood, setMood] = useState<WakeMood | null>(null);

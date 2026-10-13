@@ -214,9 +214,7 @@ export default function MissionExecutionScreen({
                 <View style={styles.errorAction}>
                   <PrimaryButton
                     label="Back to alarms"
-                    onPress={() =>
-                      navigation.reset({ index: 0, routes: [{ name: 'Main' }] })
-                    }
+                    onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Main' }] })}
                   />
                 </View>
               </Card>

@@ -61,12 +61,7 @@ export default function SelectSoundScreen({ navigation, route }: AlarmScreenProp
     handleTogglePlay(`system:${ringtone.title}`, ringtone.title, undefined, ringtone.uri);
   };
 
-  const handleTogglePlay = async (
-    id: string,
-    name: string,
-    file?: string,
-    uri?: string,
-  ) => {
+  const handleTogglePlay = async (id: string, name: string, file?: string, uri?: string) => {
     if (playingId === id) {
       await stopSoundPreview();
       setPlayingId(null);

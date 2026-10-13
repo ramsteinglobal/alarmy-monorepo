@@ -125,7 +125,6 @@ const MorningDashboardScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-
           {/* Weather Briefing Card */}
           <View style={styles.weatherCard}>
             <View style={styles.weatherMain}>
