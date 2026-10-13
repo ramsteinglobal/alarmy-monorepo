@@ -13,12 +13,9 @@ import { updateAlarm } from '../../storage/alarmStorage';
 import { getMissionChain } from '../../storage/alarmStorage';
 import { useTheme, useThemeColors } from '../../store/ThemeContext';
 import { FONT, RADIUS, SPACING, type ThemeColors } from '../../theme';
-import type { AlarmScreenProps } from '../../types/navigation';
+import type { RootScreenProps } from '../../types/navigation';
 
-export default function AlarmSuccessScreen({
-  navigation,
-  route,
-}: AlarmScreenProps<'AlarmSuccess'>) {
+export default function AlarmSuccessScreen({ navigation, route }: RootScreenProps<'AlarmSuccess'>) {
   const alarm = route.params?.alarm;
   const [leaving, setLeaving] = useState(false);
   const [mood, setMood] = useState<WakeMood | null>(null);
@@ -93,7 +90,7 @@ export default function AlarmSuccessScreen({
 
   const goToDashboard = () => {
     setLeaving(true);
-    navigation.reset({ index: 0, routes: [{ name: 'AlarmDashboard' }] });
+    navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
   };
 
   const handleViewReport = () => {

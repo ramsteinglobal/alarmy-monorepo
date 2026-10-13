@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image, Linking, Text, View } from 'react-native';
+import { Image, Linking, PermissionsAndroid, Platform, Text, View } from 'react-native';
 import { launchCamera, type Asset } from 'react-native-image-picker';
 import PrimaryButton from '../components/PrimaryButton';
 import { useThemeColors } from '../store/ThemeContext';
@@ -29,6 +29,19 @@ export default function PhotoCaptureMission({ kind, onComplete }: Props) {
     setBusy(true);
     setError(null);
     try {
+      // image-picker launches the system camera app. If our manifest declares
+      // CAMERA, Android requires us to obtain that runtime permission first.
+      if (
+        Platform.OS === 'android' &&
+        !(await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA))
+      ) {
+        const permission = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA);
+        if (permission !== PermissionsAndroid.RESULTS.GRANTED) {
+          setError('Camera access is off. Turn it on to finish this mission.');
+          return;
+        }
+      }
+
       const result = await launchCamera({
         mediaType: 'photo',
         quality: 0.7,

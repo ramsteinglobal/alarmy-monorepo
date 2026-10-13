@@ -10,7 +10,9 @@ import { DEFAULT_MISSION, Difficulty, MISSIONS } from '../../data/options';
 import { DEFAULT_MISSION_CONFIG, type MissionConfig } from '../../storage/alarmStorage';
 import { useThemeColors } from '../../store/ThemeContext';
 import { FONT, SPACING, type ThemeColors } from '../../theme';
-import type { AlarmScreenProps } from '../../types/navigation';
+import type { AlarmScreenProps, RootStackParamList } from '../../types/navigation';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const DIFFICULTY_COLOR_KEYS: Record<Difficulty, keyof ThemeColors> = {
   Easy: 'success',
@@ -22,6 +24,7 @@ export default function SelectMissionScreen({
   navigation,
   route,
 }: AlarmScreenProps<'SelectMission'>) {
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const draft = route.params.alarm;
   const colors = useThemeColors();
   const styles = createStyles(colors);
@@ -120,7 +123,7 @@ export default function SelectMissionScreen({
       description: m.description,
       difficulty: m.difficulty,
     }));
-    navigation.navigate('MissionExecution', {
+    rootNavigation.navigate('MissionExecution', {
       alarm: {
         id: 'preview',
         time: '7:00',

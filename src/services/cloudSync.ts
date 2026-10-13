@@ -18,6 +18,21 @@ const sleepOf = (uid: string) => collection(getFirestore(), 'users', uid, 'sleep
 
 const currentUid = (): string | null => firebaseAuth.currentUser?.uid ?? null;
 
+/** Firestore rejects undefined values, including inside nested objects/arrays. */
+const removeUndefined = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(removeUndefined);
+  }
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, child]) => child !== undefined)
+        .map(([key, child]) => [key, removeUndefined(child)]),
+    );
+  }
+  return value;
+};
+
 /** Push one alarm to the cloud (merge). No-op for guests. */
 export const pushAlarm = async (alarm: StoredAlarm): Promise<void> => {
   const uid = currentUid();
@@ -25,7 +40,10 @@ export const pushAlarm = async (alarm: StoredAlarm): Promise<void> => {
   try {
     await setDoc(
       doc(alarmsOf(uid), alarm.id),
-      { ...alarm, userId: uid, updatedAt: serverTimestamp() },
+      removeUndefined({ ...alarm, userId: uid, updatedAt: serverTimestamp() }) as Record<
+        string,
+        unknown
+      >,
       { merge: true },
     );
   } catch (error) {
@@ -106,7 +124,10 @@ export const initialCloudSync = async (
       ...localAlarms.map(a =>
         setDoc(
           doc(alarmsOf(uid), a.id),
-          { ...a, userId: uid, updatedAt: serverTimestamp() },
+          removeUndefined({ ...a, userId: uid, updatedAt: serverTimestamp() }) as Record<
+            string,
+            unknown
+          >,
           { merge: true },
         ),
       ),

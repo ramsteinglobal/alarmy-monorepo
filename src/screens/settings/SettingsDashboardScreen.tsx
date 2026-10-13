@@ -25,6 +25,7 @@ import {
   openBatterySettings,
   openExactAlarmSettings,
   openFullScreenIntentSettings,
+  openOverlaySettings,
   openSystemNotificationSettings,
   type ReliabilityStatus,
 } from '../../services/permissionsService';
@@ -244,6 +245,7 @@ export default function SettingsDashboardScreen() {
           try {
             // Guest flow: stay in Main, Settings re-renders as guest.
             await logOut();
+            Alert.alert('Signed out', 'Your alarms are still saved on this phone.');
           } catch (error) {
             Alert.alert('Log out failed', getAuthErrorMessage(error));
           } finally {
@@ -437,6 +439,23 @@ export default function SettingsDashboardScreen() {
                 onFix={() => {
                   openFullScreenIntentSettings().catch(error =>
                     console.error('Failed to open full-screen settings:', error),
+                  );
+                }}
+              />
+            </>
+          ) : null}
+
+          {Platform.OS === 'android' ? (
+            <>
+              <View style={styles.divider} />
+
+              <ReliabilityRow
+                title="Display over other apps"
+                subtitle="Lets alarm take over screen while using phone — tap CHECK"
+                state="unknown"
+                onFix={() => {
+                  openOverlaySettings().catch(error =>
+                    console.error('Failed to open overlay settings:', error),
                   );
                 }}
               />

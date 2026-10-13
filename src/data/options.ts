@@ -38,6 +38,13 @@ export const SOUNDS: Sound[] = [
     icon: '🌿',
     file: 'nature',
   },
+  {
+    id: 'extra_loud',
+    name: 'Extra Loud Siren',
+    description: 'High-intensity alarm for deep sleepers',
+    icon: '🚨',
+    file: 'extra_loud',
+  },
   { id: 'vibrate', name: 'Vibration Only', description: 'Wake up silently', icon: '📳' },
 ];
 

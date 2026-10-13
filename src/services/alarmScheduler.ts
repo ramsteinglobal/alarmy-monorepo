@@ -1,5 +1,6 @@
 import { Alert, Platform } from 'react-native';
 import notifee, {
+  AlarmType,
   AndroidCategory,
   AndroidImportance,
   AndroidNotificationSetting,
@@ -210,7 +211,7 @@ export async function scheduleAlarm(
       const trigger: TimestampTrigger = {
         type: TriggerType.TIMESTAMP,
         timestamp: t.at.getTime(),
-        alarmManager: { allowWhileIdle: true }, // exact alarm, fires in Doze
+        alarmManager: { type: AlarmType.SET_ALARM_CLOCK }, // real-time exact system alarm, bypasses Doze
         ...(t.repeat ? { repeatFrequency: RepeatFrequency.WEEKLY } : {}),
       };
 
@@ -282,7 +283,7 @@ export async function snoozeAlarm(
     const trigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: Date.now() + length * 60 * 1000,
-      alarmManager: { allowWhileIdle: true },
+      alarmManager: { type: AlarmType.SET_ALARM_CLOCK },
     };
 
     const chain = getMissionChain(alarm);
@@ -366,7 +367,7 @@ export async function scheduleBackup(
     const trigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: Date.now() + BACKUP_DELAY_MS,
-      alarmManager: { allowWhileIdle: true },
+      alarmManager: { type: AlarmType.SET_ALARM_CLOCK },
     };
     await notifee.createTriggerNotification(
       {
@@ -415,7 +416,7 @@ export async function scheduleWakeCheck(
     const checkTrigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: at,
-      alarmManager: { allowWhileIdle: true },
+      alarmManager: { type: AlarmType.SET_ALARM_CLOCK },
     };
     await notifee.createTriggerNotification(
       {
@@ -437,7 +438,7 @@ export async function scheduleWakeCheck(
     const reringTrigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: at + WAKE_CHECK_GRACE_MS,
-      alarmManager: { allowWhileIdle: true },
+      alarmManager: { type: AlarmType.SET_ALARM_CLOCK },
     };
     await notifee.createTriggerNotification(
       {
