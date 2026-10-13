@@ -15,6 +15,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import { useThemeColors } from '../../store/ThemeContext';
 import { FONT, type ThemeColors } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
+import { isValidEmail } from '../../utils/validation';
 import {
   getAuthErrorMessage,
   sendPasswordReset,
@@ -41,8 +42,11 @@ export default function LoginScreen({ navigation }: Props) {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithGoogle();
-      goBackToApp();
+      const user = await signInWithGoogle();
+      if (!user) return; // The account chooser was dismissed.
+      Alert.alert('Signed in', `Welcome${user.displayName ? `, ${user.displayName}` : ' back'}!`, [
+        { text: 'Continue', onPress: goBackToApp },
+      ]);
     } catch (error) {
       Alert.alert('Google sign in failed', getAuthErrorMessage(error));
     } finally {
@@ -52,8 +56,8 @@ export default function LoginScreen({ navigation }: Props) {
 
   const handleForgotPassword = () => {
     const normalizedEmail = email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      Alert.alert('Reset password', 'Type your account email above first, then tap Forgot?.');
+    if (!isValidEmail(normalizedEmail)) {
+      Alert.alert('Reset password', 'Enter a valid account email above, then tap Forgot?.');
       return;
     }
     Alert.alert('Reset password', `Send a reset link to ${normalizedEmail}?`, [
@@ -81,14 +85,16 @@ export default function LoginScreen({ navigation }: Props) {
       Alert.alert('Missing details', 'Please enter your email and password.');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      Alert.alert('Invalid email', 'Please enter a valid email address.');
+    if (!isValidEmail(normalizedEmail)) {
+      Alert.alert('Invalid email', 'Enter a valid email address, for example name@example.com.');
       return;
     }
     setLoading(true);
     try {
-      await signIn(normalizedEmail, password);
-      goBackToApp();
+      const user = await signIn(normalizedEmail, password);
+      Alert.alert('Signed in', `Welcome${user.displayName ? `, ${user.displayName}` : ' back'}!`, [
+        { text: 'Continue', onPress: goBackToApp },
+      ]);
     } catch (error) {
       Alert.alert('Sign in failed', getAuthErrorMessage(error));
     } finally {

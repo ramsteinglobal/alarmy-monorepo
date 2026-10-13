@@ -104,3 +104,16 @@ export const openFullScreenIntentSettings = async (): Promise<void> => {
   }
   await notifee.openNotificationSettings();
 };
+
+/**
+ * Opens "Display over other apps" permission settings on Android so the
+ * alarm can pop up over any active app when the phone is already unlocked.
+ */
+export const openOverlaySettings = async (): Promise<void> => {
+  if (Platform.OS !== 'android') return;
+  try {
+    await Linking.sendIntent('android.settings.action.MANAGE_OVERLAY_PERMISSION');
+  } catch {
+    await Linking.openSettings();
+  }
+};

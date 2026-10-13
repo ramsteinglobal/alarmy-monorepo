@@ -9,6 +9,11 @@ import LoginWall from '../../components/LoginWall';
 import { useAuth } from '../../store/AuthContext';
 import { getAlarmHistory, type AlarmHistoryItem } from '../../storage/alarmHistory';
 import { dateKey, getHabits, setHabit } from '../../storage/sleepStorage';
+import {
+  fetchCurrentWeather,
+  getCachedWeather,
+  type WeatherData,
+} from '../../services/weatherService';
 
 const HABITS = [
   { id: 'water', icon: '💧', title: 'Drink Water', description: 'Start your morning hydrated' },
@@ -52,12 +57,15 @@ const MorningDashboardScreen = () => {
   const { user } = useAuth();
   const [history, setHistory] = useState<AlarmHistoryItem[]>([]);
   const [habitState, setHabitState] = useState<Record<string, boolean>>({});
+  const [weather, setWeather] = useState<WeatherData | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
       getAlarmHistory().then(h => active && setHistory(h));
       getHabits().then(s => active && setHabitState(s));
+      getCachedWeather().then(w => active && w && setWeather(w));
+      fetchCurrentWeather().then(w => active && w && setWeather(w));
       return () => {
         active = false;
       };
@@ -84,12 +92,11 @@ const MorningDashboardScreen = () => {
   const doneCount = HABITS.filter(h => habitState[h.id]).length;
   const habits = HABITS.map(h => ({ ...h, completed: !!habitState[h.id] }));
   const greeting = 'TODAY';
-  const hour = new Date().getHours();
-  const greetingIcon = hour < 5 || hour >= 18 ? '☾' : '☀';
 
   const reload = () => {
     getAlarmHistory().then(setHistory);
     getHabits().then(setHabitState);
+    fetchCurrentWeather().then(w => w && setWeather(w));
   };
 
   return (
@@ -118,20 +125,49 @@ const MorningDashboardScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Greeting Card */}
-          <View style={styles.greetingCard}>
-            <View style={styles.greetingIcon}>
-              <Text style={styles.greetingIconText}>{greetingIcon}</Text>
+
+          {/* Weather Briefing Card */}
+          <View style={styles.weatherCard}>
+            <View style={styles.weatherMain}>
+              <View style={styles.weatherTempRow}>
+                <Text style={styles.weatherIcon}>{weather?.icon ?? '🌤️'}</Text>
+                <Text style={styles.weatherTemp}>
+                  {weather ? `${weather.temperature}°` : '--°'}
+                </Text>
+              </View>
+
+              <View style={styles.weatherInfo}>
+                <Text style={styles.weatherCity} numberOfLines={1}>
+                  {weather?.city ?? 'Detecting location…'}
+                </Text>
+                <Text style={styles.weatherCondition}>
+                  {weather?.condition ?? 'Fetching weather…'}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.weatherRefreshBtn}
+                activeOpacity={0.7}
+                onPress={() => {
+                  fetchCurrentWeather().then(w => w && setWeather(w));
+                }}
+              >
+                <Text style={styles.weatherRefreshIcon}>↻</Text>
+              </TouchableOpacity>
             </View>
 
-            <View style={styles.greetingContent}>
-              <Text style={styles.greetingTitle}>Good morning!</Text>
+            <View style={styles.weatherDivider} />
 
-              <Text style={styles.greetingText}>
-                {last
-                  ? `Last wake-up ${last.alarmTime} ${last.period} — ${last.missionTitle}.`
-                  : 'Complete your first alarm to start your routine.'}
+            <View style={styles.weatherFooter}>
+              <Text style={styles.weatherMeta}>
+                H: {weather ? `${weather.high}°` : '--'} · L: {weather ? `${weather.low}°` : '--'}
               </Text>
+              <Text style={styles.weatherMeta}>
+                💨 {weather ? `${weather.windSpeed} km/h` : '--'}
+              </Text>
+              {weather?.lastUpdated ? (
+                <Text style={styles.weatherUpdated}>Updated {weather.lastUpdated}</Text>
+              ) : null}
             </View>
           </View>
 
@@ -343,44 +379,86 @@ const createStyles = (colors: ThemeColors) =>
       paddingBottom: 25,
     },
 
-    greetingCard: {
-      backgroundColor: colors.accentSoft,
+    weatherCard: {
+      backgroundColor: colors.surface,
       borderRadius: 18,
       padding: 16,
+      marginTop: 6,
+      borderWidth: 1,
+      borderColor: colors.divider,
+    },
+
+    weatherMain: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    weatherTempRow: {
       flexDirection: 'row',
       alignItems: 'center',
     },
 
-    greetingIcon: {
-      width: 45,
-      height: 45,
-      borderRadius: 23,
-      backgroundColor: colors.accentTint,
-      alignItems: 'center',
-      justifyContent: 'center',
+    weatherIcon: {
+      fontSize: 32,
+      marginRight: 8,
     },
 
-    greetingIconText: {
-      fontSize: 23,
-      color: colors.accent,
-    },
-
-    greetingContent: {
-      flex: 1,
-      marginLeft: 12,
-    },
-
-    greetingTitle: {
-      fontSize: 15,
+    weatherTemp: {
+      fontSize: 28,
       fontWeight: '700',
       color: colors.text,
     },
 
-    greetingText: {
+    weatherInfo: {
+      flex: 1,
+      marginLeft: 12,
+    },
+
+    weatherCity: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    weatherCondition: {
       fontSize: 12,
       color: colors.muted,
-      lineHeight: 17,
-      marginTop: 3,
+      marginTop: 2,
+    },
+
+    weatherRefreshBtn: {
+      padding: 8,
+      borderRadius: 12,
+      backgroundColor: colors.card,
+    },
+
+    weatherRefreshIcon: {
+      fontSize: 14,
+      color: colors.muted,
+    },
+
+    weatherDivider: {
+      height: 1,
+      backgroundColor: colors.divider,
+      marginVertical: 12,
+    },
+
+    weatherFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    weatherMeta: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.muted,
+    },
+
+    weatherUpdated: {
+      fontSize: 10,
+      color: colors.muted,
     },
 
     sectionTitle: {

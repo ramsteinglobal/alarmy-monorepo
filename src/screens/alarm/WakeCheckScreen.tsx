@@ -12,14 +12,14 @@ import {
 } from '../../services/alarmScheduler';
 import { useThemeColors } from '../../store/ThemeContext';
 import { FONT, SPACING, type ThemeColors } from '../../theme';
-import type { AlarmScreenProps } from '../../types/navigation';
+import type { RootScreenProps } from '../../types/navigation';
 import { formatClock } from '../../utils/time';
 
 /**
  * Fall-back-asleep prevention: minutes after dismiss, prove you're still up.
  * Ignoring this screen lets the parallel re-ring trigger restart the mission.
  */
-export default function WakeCheckScreen({ navigation, route }: AlarmScreenProps<'WakeCheck'>) {
+export default function WakeCheckScreen({ navigation, route }: RootScreenProps<'WakeCheck'>) {
   const alarm = route.params?.alarm;
   const colors = useThemeColors();
   const styles = createStyles(colors);
@@ -70,7 +70,7 @@ export default function WakeCheckScreen({ navigation, route }: AlarmScreenProps<
         console.error('Failed to cancel wake-up check:', error),
       );
     }
-    navigation.reset({ index: 0, routes: [{ name: 'AlarmDashboard' }] });
+    navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
   };
 
   const { time, period } = formatClock(now);

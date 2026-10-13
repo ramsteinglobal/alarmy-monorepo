@@ -17,7 +17,13 @@ import AlarmListItem from '../../components/AlarmListItem';
 import Card from '../../components/Card';
 import PrimaryButton from '../../components/PrimaryButton';
 import Screen from '../../components/Screen';
-import { cancelAlarm, promptFixPermissions, scheduleAlarm } from '../../services/alarmScheduler';
+import {
+  cancelAlarm,
+  previewSound,
+  promptFixPermissions,
+  scheduleAlarm,
+} from '../../services/alarmScheduler';
+import { playSoundPreview } from '../../services/nativeAudio';
 import { pushAlarm, pushAlarmDelete } from '../../services/cloudSync';
 import { deleteAlarm, getAlarms, StoredAlarm, updateAlarm } from '../../storage/alarmStorage';
 import {
@@ -28,12 +34,17 @@ import {
 } from '../../services/permissionsService';
 import { useThemeColors } from '../../store/ThemeContext';
 import { FONT, SPACING, TOUCH_MIN, type ThemeColors } from '../../theme';
-import type { AlarmScreenProps } from '../../types/navigation';
+import type { AlarmScreenProps, RootStackParamList } from '../../types/navigation';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { buildTriggers } from '../../utils/nextTrigger';
 import { formatTimeUntil } from '../../utils/time';
 import { missionChainTitle } from '../../storage/alarmStorage';
 
 export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDashboard'>) {
+  // For navigating to root-level screens (AlarmRinging, MissionExecution, etc.)
+  // that are outside this AlarmStack navigator.
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [alarms, setAlarms] = useState<StoredAlarm[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -113,6 +124,19 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
         },
       },
     ]);
+  };
+
+  const handleTestRing = async (alarm: StoredAlarm) => {
+    const sound = alarm.sound;
+    if (sound?.id.startsWith('system_') && sound.file) {
+      // Device ringtone URIs are played directly; Android alarm channels only
+      // accept bundled raw sound resources.
+      await playSoundPreview(sound.id, sound.name, undefined, sound.file);
+    } else {
+      // Use the same notification channel path as a real alarm for bundled tones.
+      await previewSound(sound?.id ?? 'classic', sound?.name ?? 'Classic Alarm', sound?.file);
+    }
+    rootNavigation.navigate('AlarmRinging', { alarm });
   };
 
   const upcoming = [...alarms]
@@ -264,9 +288,7 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
               onToggle={enabled => handleToggle(alarm, enabled)}
               onEdit={() => navigation.navigate('CreateAlarm', { editAlarm: alarm })}
               onDelete={() => handleDelete(alarm)}
-              onTestRing={
-                __DEV__ ? () => navigation.navigate('AlarmRinging', { alarm }) : undefined
-              }
+              onTestRing={__DEV__ ? () => handleTestRing(alarm) : undefined}
             />
           ))
         )}

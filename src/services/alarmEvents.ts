@@ -30,13 +30,9 @@ async function openRinging(alarmId: string, snoozeCount = 0): Promise<void> {
   }
 
   // AlarmRinging is nested inside the Alarm tab navigator.
-  navigationRef.navigate('Main', {
-    screen: 'Alarm',
-    params: {
-      screen: 'AlarmRinging',
-      params: { alarm, snoozeCount },
-    },
-  });
+  // AlarmRinging is now at the root stack level (fullScreenModal) so the
+  // tab bar is hidden during alarm execution. No nested navigate needed.
+  navigationRef.navigate('AlarmRinging', { alarm, snoozeCount });
 }
 
 async function openWakeCheck(alarmId: string): Promise<void> {
@@ -56,13 +52,8 @@ async function openWakeCheck(alarmId: string): Promise<void> {
     return;
   }
 
-  navigationRef.navigate('Main', {
-    screen: 'Alarm',
-    params: {
-      screen: 'WakeCheck',
-      params: { alarm },
-    },
-  });
+  // WakeCheck is now at the root stack level — navigate directly.
+  navigationRef.navigate('WakeCheck', { alarm });
 }
 
 /** Opens a pending alarm after NavigationContainer becomes ready. */

@@ -23,7 +23,7 @@ import { getMissionChain, getMissionConfig, type MissionRef } from '../../storag
 import { cancelBackup } from '../../services/alarmScheduler';
 import { useThemeColors } from '../../store/ThemeContext';
 import { FONT, RADIUS, SPACING, type ThemeColors } from '../../theme';
-import type { AlarmScreenProps } from '../../types/navigation';
+import type { RootScreenProps } from '../../types/navigation';
 
 const FALLBACK_MISSION: MissionRef = {
   id: 'math',
@@ -34,7 +34,7 @@ const FALLBACK_MISSION: MissionRef = {
 export default function MissionExecutionScreen({
   navigation,
   route,
-}: AlarmScreenProps<'MissionExecution'>) {
+}: RootScreenProps<'MissionExecution'>) {
   const alarm = route.params?.alarm;
   const startedAt = route.params?.startedAt;
   const snoozeCount = route.params?.snoozeCount ?? 0;
@@ -215,7 +215,7 @@ export default function MissionExecutionScreen({
                   <PrimaryButton
                     label="Back to alarms"
                     onPress={() =>
-                      navigation.reset({ index: 0, routes: [{ name: 'AlarmDashboard' }] })
+                      navigation.reset({ index: 0, routes: [{ name: 'Main' }] })
                     }
                   />
                 </View>

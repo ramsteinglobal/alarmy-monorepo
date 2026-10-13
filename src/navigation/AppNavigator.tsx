@@ -15,12 +15,14 @@ import type {
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 
-// Alarm
+// Alarm creation flow (inside tabs)
 import AlarmDashboard from '../screens/alarm/AlarmDashboard';
 import CreateAlarmScreen from '../screens/alarm/CreateAlarmScreen';
 import SelectSoundScreen from '../screens/alarm/SelectSoundScreen';
 import SelectMissionScreen from '../screens/alarm/SelectMissionScreen';
 import AlarmSummaryScreen from '../screens/alarm/AlarmSummaryScreen';
+
+// Alarm execution screens (full-screen, outside tabs — no tab bar escape)
 import AlarmRingingScreen from '../screens/alarm/AlarmRingingScreen';
 import MissionExecutionScreen from '../screens/alarm/MissionExecutionScreen';
 import AlarmSuccessScreen from '../screens/alarm/AlarmSuccessScreen';
@@ -38,7 +40,8 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AlarmStack = createNativeStackNavigator<AlarmStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// ALARM NAVIGATOR
+// ── ALARM CREATION NAVIGATOR (inside tabs) ──────────────────────────────────
+// Only contains the alarm setup flow. Execution screens live on the root stack.
 function AlarmNavigator() {
   return (
     <AlarmStack.Navigator
@@ -48,30 +51,10 @@ function AlarmNavigator() {
       }}
     >
       <AlarmStack.Screen name="AlarmDashboard" component={AlarmDashboard} />
-
       <AlarmStack.Screen name="CreateAlarm" component={CreateAlarmScreen} />
-
       <AlarmStack.Screen name="SelectSound" component={SelectSoundScreen} />
-
       <AlarmStack.Screen name="SelectMission" component={SelectMissionScreen} />
-
       <AlarmStack.Screen name="AlarmSummary" component={AlarmSummaryScreen} />
-
-      <AlarmStack.Screen
-        name="AlarmRinging"
-        component={AlarmRingingScreen}
-        options={{ gestureEnabled: false }}
-      />
-
-      <AlarmStack.Screen
-        name="MissionExecution"
-        component={MissionExecutionScreen}
-        options={{ gestureEnabled: false }}
-      />
-
-      <AlarmStack.Screen name="AlarmSuccess" component={AlarmSuccessScreen} />
-
-      <AlarmStack.Screen name="WakeCheck" component={WakeCheckScreen} />
     </AlarmStack.Navigator>
   );
 }
@@ -160,10 +143,15 @@ function MainTabs() {
   );
 }
 
-// ROOT NAVIGATOR
+// ── ROOT NAVIGATOR ───────────────────────────────────────────────────────────
 // Guest-first: Main (alarms) is always open. Login/Signup are pushed on top
-// when a locked tab or Settings asks for an account. logged-in users still
-// land straight on the Alarm Dashboard after the Splash.
+// when a locked tab or Settings asks for an account.
+//
+// AlarmRinging, MissionExecution, AlarmSuccess, and WakeCheck are at the ROOT
+// level as fullScreenModal so they:
+//   1. Cover the entire screen (no bottom tab bar visible)
+//   2. Cannot be dismissed by tab taps or swipe-back gestures
+//   3. Appear above any other open screen, including lock screen (via MainActivity flags)
 export default function AppNavigator() {
   const { loading } = useAuth();
 
@@ -178,12 +166,51 @@ export default function AppNavigator() {
         headerShown: false,
       }}
     >
+      {/* ── Normal app screens ─────────────────────────────────────── */}
       <RootStack.Screen name="Main" component={MainTabs} />
       <RootStack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal' }} />
       <RootStack.Screen
         name="Signup"
         component={SignupScreen}
         options={{ presentation: 'modal' }}
+      />
+
+      {/* ── Alarm execution: full-screen, no tab bar, no back escape ─ */}
+      <RootStack.Screen
+        name="AlarmRinging"
+        component={AlarmRingingScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: false,
+          animation: 'fade',
+        }}
+      />
+      <RootStack.Screen
+        name="MissionExecution"
+        component={MissionExecutionScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: false,
+          animation: 'slide_from_bottom',
+        }}
+      />
+      <RootStack.Screen
+        name="AlarmSuccess"
+        component={AlarmSuccessScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: false,
+          animation: 'fade',
+        }}
+      />
+      <RootStack.Screen
+        name="WakeCheck"
+        component={WakeCheckScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: false,
+          animation: 'slide_from_bottom',
+        }}
       />
     </RootStack.Navigator>
   );

@@ -13,6 +13,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import { useThemeColors } from '../../store/ThemeContext';
 import { FONT, type ThemeColors } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
+import { isValidEmail } from '../../utils/validation';
 import {
   getAuthErrorMessage,
   signInWithGoogle,
@@ -61,8 +62,8 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
       Alert.alert('Missing details', 'Please enter your name, email, and password.');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      Alert.alert('Invalid email', 'Please enter a valid email address.');
+    if (!isValidEmail(normalizedEmail)) {
+      Alert.alert('Invalid email', 'Enter a valid email address, for example name@example.com.');
       return;
     }
     if (password.length < 6) {
@@ -76,7 +77,9 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
     setLoading(true);
     try {
       await signUp(normalizedName, normalizedEmail, password, selectedPersona);
-      goBackToApp();
+      Alert.alert('Account created', 'Your Wakely account is ready.', [
+        { text: 'Continue', onPress: goBackToApp },
+      ]);
     } catch (error: unknown) {
       Alert.alert('Signup failed', getAuthErrorMessage(error));
     } finally {
@@ -91,8 +94,11 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
     }
     setLoading(true);
     try {
-      await signInWithGoogle(selectedPersona);
-      goBackToApp();
+      const user = await signInWithGoogle(selectedPersona);
+      if (!user) return; // The account chooser was dismissed.
+      Alert.alert('Account ready', `Welcome${user.displayName ? `, ${user.displayName}` : ''}!`, [
+        { text: 'Continue', onPress: goBackToApp },
+      ]);
     } catch (error) {
       Alert.alert('Google sign in failed', getAuthErrorMessage(error));
     } finally {

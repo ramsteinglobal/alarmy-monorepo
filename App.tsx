@@ -15,15 +15,7 @@ const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['wakely://'],
   config: {
     screens: {
-      Main: {
-        screens: {
-          Alarm: {
-            screens: {
-              AlarmRinging: 'alarm',
-            },
-          },
-        },
-      },
+      AlarmRinging: 'alarm',
       Login: 'login',
       Signup: 'signup',
     },
