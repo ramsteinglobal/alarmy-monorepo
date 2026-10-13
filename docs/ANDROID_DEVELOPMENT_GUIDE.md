@@ -266,15 +266,27 @@ Run these from the repository root:
 | --------------------------------------------- | -------------------------------------------------------------------------- |
 | `npm ci`                                      | Install JavaScript dependencies from the committed lockfile                |
 | `npm run start`                               | Start Metro                                                                |
-| `npm run android:build:debug`                 | Build an installable development APK without trying to connect to a device |
+| `npm run android:build:debug`                 | Build an installable development APK without trying to connect to a device (arm64-only, same as CI) |
+| `npm run android:build:debug:all`             | Same, but for all ABIs (slower, larger APK)                                |
+| `npm run android:deploy:debug`                | Clean rebuild + reinstall on the attached phone (use after native changes) |
+| `npm run doctor`                              | Diagnose local env: node/java/SDK/adb/stale node_modules                  |
+| `npm run android:clean`                       | Run a Gradle clean (same script locally and in CI)                         |
 | `npm run android:serve:apk`                   | Serve the built debug APK on private forwarded port 8082                   |
 | `npm run android`                             | Build, install, and launch on a device/emulator visible to `adb`           |
 | `npm run android:install:debug`               | Install an already-built debug APK using visible `adb`                     |
 | `npm run android:launch`                      | Launch the installed app using visible `adb`                               |
 | `npm run android:build:release`               | Build an unsigned release APK; not ready for production distribution       |
+| `npm run verify`                              | Run everything CI checks: lint + format + typecheck + tests + backend build |
+| `npm run ci:local`                            | Run `verify` plus the debug APK build (full local reproduction of CI)      |
 | `npm run lint`                                | Run ESLint                                                                 |
 | `npm run typecheck`                           | Run the TypeScript check                                                   |
 | `npm test -- --passWithNoTests --watch=false` | Run Jest tests once                                                        |
+
+Local builds and GitHub Actions use the same script
+(`scripts/build-apk.mjs` via `npm run android:build:*`), so flags,
+architecture (`arm64-v8a` by default, `--arch=all` for every ABI), and the
+APK-exists-and-non-empty check are identical everywhere. `npm run verify`
+runs the same checks as both workflows (`CI` and `Android APK Build`).
 
 The release build output is
 `android/app/build/outputs/apk/release/app-release-unsigned.apk`. It is
@@ -287,11 +299,15 @@ production key.
 The **Android APK Build** workflow runs for pull requests, pushes to `main`,
 and manual dispatch. Docs-only, backend-only, and iOS-only changes skip it.
 It runs two jobs in parallel:
-quality (lint, typecheck, Jest) and the debug APK build. Stale runs cancel
-automatically when new commits land. The APK is built for
-`arm64` phones only (faster builds, smaller download — matching our physical
-test phones), checks that it exists and is non-empty, and uploads the
-`wakely-debug-apk` artifact. It does not require production signing credentials
+quality (the same `npm run verify` you run locally: lint, format check,
+typecheck, Jest, backend install/build) and the debug APK build. Stale runs
+cancel automatically when new commits land. The APK is built by calling the
+same shared script local devs use (`npm run android:build:debug` →
+`scripts/build-apk.mjs`, `arm64` phones only by default for faster builds and
+a smaller download — matching our physical test phones; use the `arch` input
+or local `--arch=all` for every ABI), checks that it exists and is non-empty,
+and uploads the `wakely-debug-apk` artifact. Manual dispatch can also build
+`release` or `both`. It does not require production signing credentials
 and does not launch the APK on an emulator. Gradle dependency caching keeps
 repeat builds fast after the first run.
 
@@ -334,13 +350,52 @@ Fix it in order:
 
 ```bash
 npm ci
-cd android && ./gradlew clean && cd ..
+npm run android:clean
 npm run android:build:debug
 ```
 
 Then reinstall with `adb install -r` as in step 4. If it still fails, paste the
 first `error:` block from the Gradle output when asking for help — the tail of
 the log is usually just a summary.
+
+### Red screen: "Notifee native module not found" (or any native module)
+
+The JS bundle (from Metro) is newer than the native code inside the installed
+APK — typically an old APK still on the phone, or an APK built from stale
+`node_modules` (e.g. you pulled code that added/updated a native library but
+did not reinstall dependencies). GitHub never hits this because it builds from
+a clean checkout with fresh `npm ci` every time.
+
+Fix in order:
+
+```bash
+npm run doctor                  # tells you exactly what is stale/missing
+npm ci                          # refresh dependencies (also re-applies patches/)
+npm run android:deploy:debug    # clean rebuild + reinstall on the phone
+```
+
+`npm run android:build:debug` now refuses to build from stale `node_modules`
+and cleans Gradle first (same as CI), so this class of failure is caught
+before an APK is produced instead of on the phone screen.
+
+### Red screen: "Make sure you're running Metro ... index.android.bundle"
+
+This is expected, not a bug: **debug APKs load JavaScript from Metro**, they do
+not contain the JS. The phone must reach your Metro server:
+
+1. Start Metro and leave it running: `npm run android:dev`
+2. Bridge the phone to it over USB: `adb reverse tcp:8081 tcp:8081`
+3. Reload the app (shake → Reload, or `R` in Metro).
+
+If you want an APK that opens without Metro (e.g. handing the phone to someone
+else), build and install the release APK instead — it packages the bundle:
+
+```bash
+npm run android:build:release
+adb install -r android/app/build/outputs/apk/release/app-release.apk
+```
+
+(It is unsigned: fine for device testing, not for stores.)
 
 ### `adb devices` shows `unauthorized` or no device
 
