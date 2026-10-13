@@ -7,6 +7,7 @@ import notifee, {
   AuthorizationStatus,
   RepeatFrequency,
   TriggerType,
+  type NativeAndroidChannel,
   type TimestampTrigger,
 } from '@notifee/react-native';
 
@@ -59,6 +60,75 @@ const soundFileFor = (soundId: string, file?: string): string | undefined => {
   return file;
 };
 
+/**
+ * True when the on-device channel already matches what we are about to
+ * request. Android freezes a channel's sound/vibration/importance/bypassDnd
+ * at creation time ("cannot be overridden once the channel is created"), so
+ * a stale channel must be deleted and recreated — otherwise the alarm (and
+ * the test-ring preview) stays silent even though scheduling "succeeds".
+ */
+export const channelMatchesSpec = (
+  existing: NativeAndroidChannel,
+  expectedFile: string | undefined,
+  vibration: boolean,
+): boolean => {
+  // Anything below HIGH won't reliably ring.
+  if (existing.importance !== AndroidImportance.HIGH) return false;
+  if ((existing.vibration ?? true) !== vibration) return false;
+  // bypassDnd is undefined on API < 29 where the setting doesn't exist.
+  if (existing.bypassDnd === false) return false;
+  if (expectedFile) {
+    // soundURI looks like android.resource://<package>/raw/<name>.
+    const uri = existing.soundURI ?? '';
+    if (!uri || !uri.includes(expectedFile)) return false;
+  }
+  return true;
+};
+
+type ChannelSpec = {
+  id: string;
+  name: string;
+  /** Raw resource name (Android) / wav basename (iOS). Absent = system default. */
+  file?: string;
+  vibration: boolean;
+};
+
+/**
+ * Creates the channel, or deletes + recreates it when the frozen on-device
+ * copy no longer matches (different tone, vibration flip, lowered
+ * importance, missing DND bypass). Returns the channel id. iOS has no
+ * channels, so there it is a plain create.
+ */
+async function syncChannel(spec: ChannelSpec): Promise<string> {
+  const channel = {
+    id: spec.id,
+    name: spec.name,
+    importance: AndroidImportance.HIGH,
+    visibility: AndroidVisibility.PUBLIC,
+    // Android wants the raw name, iOS wants the bundled filename.
+    ...(spec.file ? { sound: Platform.OS === 'ios' ? `${spec.file}.wav` : spec.file } : {}),
+    vibration: spec.vibration,
+    bypassDnd: true,
+  };
+  if (Platform.OS === 'android' && spec.file) {
+    try {
+      const existing = await notifee.getChannel(spec.id);
+      if (existing) {
+        if (channelMatchesSpec(existing, spec.file, spec.vibration)) return spec.id;
+        // Stale channel: sound/vibration/importance are frozen, so the only
+        // way to apply the new tone is to delete and recreate the channel.
+        await notifee.deleteChannel(spec.id);
+      }
+    } catch (error) {
+      // get/delete failing must never block scheduling — fall through and
+      // (re)create below; a create on an existing channel is a safe no-op.
+      console.warn(`Channel sync for ${spec.id} fell back to create:`, error);
+    }
+  }
+  await notifee.createChannel(channel);
+  return spec.id;
+}
+
 async function ensureChannelForSound(opts: {
   soundId: string;
   soundName: string;
@@ -67,30 +137,12 @@ async function ensureChannelForSound(opts: {
 }): Promise<string> {
   const id = channelIdForSound(opts.soundId);
   const file = soundFileFor(opts.soundId, opts.file);
-  await notifee.createChannel({
-    id,
-    name: `Wakely ${opts.soundName}`,
-    importance: AndroidImportance.HIGH,
-    visibility: AndroidVisibility.PUBLIC,
-    // Android wants the raw name, iOS wants the bundled filename.
-    ...(file ? { sound: Platform.OS === 'ios' ? `${file}.wav` : file } : {}),
-    vibration: opts.vibration,
-    bypassDnd: true,
-  });
-  return id;
+  return syncChannel({ id, name: `Wakely ${opts.soundName}`, file, vibration: opts.vibration });
 }
 
 /** Legacy single channel (kept for vibration-preference rebuilds). */
 async function ensureChannel(vibration = true) {
-  return notifee.createChannel({
-    id: ALARM_CHANNEL_ID,
-    name: 'Wakely Alarms',
-    importance: AndroidImportance.HIGH,
-    visibility: AndroidVisibility.PUBLIC,
-    sound: 'default',
-    vibration,
-    bypassDnd: true,
-  });
+  return syncChannel({ id: ALARM_CHANNEL_ID, name: 'Wakely Alarms', vibration });
 }
 
 /** Rebuild the channel with the user's vibration preference. */
