@@ -1,40 +1,103 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 
-import { COLORS } from '../../theme';
+import { FONT, type ThemeColors } from '../../theme';
+import { useThemeColors } from '../../store/ThemeContext';
+import LoginWall from '../../components/LoginWall';
+import { useAuth } from '../../store/AuthContext';
+import { getAlarmHistory, type AlarmHistoryItem } from '../../storage/alarmHistory';
+import { dateKey, getHabits, setHabit } from '../../storage/sleepStorage';
+import {
+  fetchCurrentWeather,
+  getCachedWeather,
+  type WeatherData,
+} from '../../services/weatherService';
+
+const HABITS = [
+  { id: 'water', icon: '💧', title: 'Drink Water', description: 'Start your morning hydrated' },
+  { id: 'stretch', icon: '🧘', title: 'Morning Stretch', description: 'Take 5 minutes to stretch' },
+  {
+    id: 'sunlight',
+    icon: '☀',
+    title: 'Get Some Sunlight',
+    description: 'Spend a few minutes outside',
+  },
+  { id: 'plan', icon: '✓', title: 'Plan Your Day', description: 'Review your priorities' },
+];
+
+const dayKeyOf = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? '' : dateKey(d);
+};
+
+const streakOf = (history: AlarmHistoryItem[]): number => {
+  const days = new Set(
+    history
+      .filter(h => h.completed)
+      .map(h => dayKeyOf(h.completedAt))
+      .filter(Boolean),
+  );
+  if (days.size === 0) return 0;
+  const today = new Date();
+  const cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (!days.has(dateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
+  let streak = 0;
+  while (days.has(dateKey(cursor))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+};
 
 const MorningDashboardScreen = () => {
-  const habits = [
-    {
-      id: 'water',
-      icon: '💧',
-      title: 'Drink Water',
-      description: 'Start your morning hydrated',
-      completed: true,
-    },
-    {
-      id: 'stretch',
-      icon: '🧘',
-      title: 'Morning Stretch',
-      description: 'Take 5 minutes to stretch',
-      completed: false,
-    },
-    {
-      id: 'sunlight',
-      icon: '☀',
-      title: 'Get Some Sunlight',
-      description: 'Spend a few minutes outside',
-      completed: false,
-    },
-    {
-      id: 'plan',
-      icon: '✓',
-      title: 'Plan Your Day',
-      description: 'Review your priorities',
-      completed: false,
-    },
-  ];
+  const colors = useThemeColors();
+  const styles = createStyles(colors);
+  const { user } = useAuth();
+  const [history, setHistory] = useState<AlarmHistoryItem[]>([]);
+  const [habitState, setHabitState] = useState<Record<string, boolean>>({});
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      getAlarmHistory().then(h => active && setHistory(h));
+      getHabits().then(s => active && setHabitState(s));
+      getCachedWeather().then(w => active && w && setWeather(w));
+      fetchCurrentWeather().then(w => active && w && setWeather(w));
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
+
+  if (!user) {
+    return (
+      <LoginWall
+        icon="☀"
+        title="Morning routines need an account"
+        message="Sign in free to build routines, earn streaks, and personalize your mornings."
+      />
+    );
+  }
+
+  const toggleHabit = (id: string, done: boolean) => {
+    setHabitState(cur => ({ ...cur, [id]: done }));
+    setHabit(id, done).catch(error => console.error('Failed to save habit:', error));
+  };
+
+  const last = history.find(h => h.completed) ?? null;
+  const streak = streakOf(history);
+  const doneCount = HABITS.filter(h => habitState[h.id]).length;
+  const habits = HABITS.map(h => ({ ...h, completed: !!habitState[h.id] }));
+  const greeting = 'TODAY';
+
+  const reload = () => {
+    getAlarmHistory().then(setHistory);
+    getHabits().then(setHabitState);
+    fetchCurrentWeather().then(w => w && setWeather(w));
+  };
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -42,13 +105,19 @@ const MorningDashboardScreen = () => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerSmall}>GOOD MORNING</Text>
+            <Text style={styles.headerSmall}>{greeting}</Text>
 
             <Text style={styles.headerTitle}>Morning</Text>
           </View>
 
-          <TouchableOpacity style={styles.menuButton} activeOpacity={0.7}>
-            <Text style={styles.menuText}>⋮</Text>
+          <TouchableOpacity
+            style={styles.menuButton}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Refresh morning"
+            onPress={reload}
+          >
+            <Text style={styles.menuText}>↻</Text>
           </TouchableOpacity>
         </View>
 
@@ -56,18 +125,48 @@ const MorningDashboardScreen = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* Greeting Card */}
-          <View style={styles.greetingCard}>
-            <View style={styles.greetingIcon}>
-              <Text style={styles.greetingIconText}>☀</Text>
+          {/* Weather Briefing Card */}
+          <View style={styles.weatherCard}>
+            <View style={styles.weatherMain}>
+              <View style={styles.weatherTempRow}>
+                <Text style={styles.weatherIcon}>{weather?.icon ?? '🌤️'}</Text>
+                <Text style={styles.weatherTemp}>
+                  {weather ? `${weather.temperature}°` : '--°'}
+                </Text>
+              </View>
+
+              <View style={styles.weatherInfo}>
+                <Text style={styles.weatherCity} numberOfLines={1}>
+                  {weather?.city ?? 'Detecting location…'}
+                </Text>
+                <Text style={styles.weatherCondition}>
+                  {weather?.condition ?? 'Fetching weather…'}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.weatherRefreshBtn}
+                activeOpacity={0.7}
+                onPress={() => {
+                  fetchCurrentWeather().then(w => w && setWeather(w));
+                }}
+              >
+                <Text style={styles.weatherRefreshIcon}>↻</Text>
+              </TouchableOpacity>
             </View>
 
-            <View style={styles.greetingContent}>
-              <Text style={styles.greetingTitle}>Good morning!</Text>
+            <View style={styles.weatherDivider} />
 
-              <Text style={styles.greetingText}>
-                You completed your alarm. Great start to the day.
+            <View style={styles.weatherFooter}>
+              <Text style={styles.weatherMeta}>
+                H: {weather ? `${weather.high}°` : '--'} · L: {weather ? `${weather.low}°` : '--'}
               </Text>
+              <Text style={styles.weatherMeta}>
+                💨 {weather ? `${weather.windSpeed} km/h` : '--'}
+              </Text>
+              {weather?.lastUpdated ? (
+                <Text style={styles.weatherUpdated}>Updated {weather.lastUpdated}</Text>
+              ) : null}
             </View>
           </View>
 
@@ -77,12 +176,14 @@ const MorningDashboardScreen = () => {
           <View style={styles.summaryCard}>
             <View style={styles.summaryMain}>
               <Text style={styles.summaryTime}>
-                7:52
-                <Text style={styles.summaryPeriod}> AM</Text>
+                {last?.alarmTime ?? '--:--'}
+                <Text style={styles.summaryPeriod}> {last?.period ?? ''}</Text>
               </Text>
 
               <View style={styles.completedBadge}>
-                <Text style={styles.completedBadgeText}>✓ COMPLETED</Text>
+                <Text style={styles.completedBadgeText}>
+                  {last ? '✓ COMPLETED' : 'NO WAKE-UPS YET'}
+                </Text>
               </View>
             </View>
 
@@ -92,19 +193,21 @@ const MorningDashboardScreen = () => {
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>MISSION</Text>
 
-                <Text style={styles.summaryValue}>Math Mission</Text>
+                <Text style={styles.summaryValue}>{last?.missionTitle ?? '—'}</Text>
               </View>
 
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>RESULT</Text>
 
-                <Text style={styles.summaryValue}>Successful</Text>
+                <Text style={styles.summaryValue}>
+                  {last ? (last.mood ? `Felt ${last.mood}` : 'Successful') : '—'}
+                </Text>
               </View>
 
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>STREAK</Text>
 
-                <Text style={styles.summaryValue}>5 days</Text>
+                <Text style={styles.summaryValue}>{streak === 1 ? '1 day' : `${streak} days`}</Text>
               </View>
             </View>
           </View>
@@ -113,21 +216,31 @@ const MorningDashboardScreen = () => {
           <Text style={styles.sectionTitle}>Morning Score</Text>
 
           <View style={styles.scoreCard}>
-            <View style={styles.scoreCircle}>
-              <Text style={styles.scoreNumber}>82</Text>
-
-              <Text style={styles.scoreOutOf}>/100</Text>
+            <View style={styles.scoreBadgeWrap}>
+              <View style={styles.scoreCircle}>
+                <Text style={styles.scoreNumber}>{streak}</Text>
+              </View>
+              <Text style={styles.scoreOutOf}>day streak</Text>
             </View>
 
             <View style={styles.scoreContent}>
-              <Text style={styles.scoreTitle}>Great start!</Text>
+              <Text style={styles.scoreTitle}>
+                {streak >= 5 ? 'Unstoppable!' : streak >= 2 ? 'Great start!' : 'Day one energy!'}
+              </Text>
 
               <Text style={styles.scoreDescription}>
-                You're building a consistent morning routine.
+                {history.length > 0
+                  ? "You're building a consistent morning routine."
+                  : 'Wake up with Wakely to start your streak.'}
               </Text>
 
               <View style={styles.scoreProgressBackground}>
-                <View style={styles.scoreProgress} />
+                <View
+                  style={[
+                    styles.scoreProgress,
+                    { width: `${Math.min(100, Math.round((streak / 7) * 100))}%` },
+                  ]}
+                />
               </View>
             </View>
           </View>
@@ -136,13 +249,22 @@ const MorningDashboardScreen = () => {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionHeaderTitle}>Morning Routine</Text>
 
-            <Text style={styles.routineCount}>1 / 4</Text>
+            <Text style={styles.routineCount}>
+              {doneCount} / {HABITS.length}
+            </Text>
           </View>
 
           <View style={styles.habitsCard}>
             {habits.map((habit, index) => (
               <React.Fragment key={habit.id}>
-                <TouchableOpacity style={styles.habitRow} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={styles.habitRow}
+                  activeOpacity={0.7}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: habit.completed }}
+                  accessibilityLabel={habit.title}
+                  onPress={() => toggleHabit(habit.id, !habit.completed)}
+                >
                   <View style={[styles.habitIcon, habit.completed && styles.habitIconCompleted]}>
                     <Text style={styles.habitIconText}>{habit.icon}</Text>
                   </View>
@@ -174,14 +296,16 @@ const MorningDashboardScreen = () => {
             </View>
 
             <View style={styles.streakContent}>
-              <Text style={styles.streakTitle}>5 Day Wake-Up Streak</Text>
+              <Text style={styles.streakTitle}>
+                {streak > 0 ? `${streak} Day Wake-Up Streak` : 'Start Your Streak'}
+              </Text>
 
               <Text style={styles.streakDescription}>
-                Keep going! You're creating a healthy habit.
+                {streak > 0
+                  ? "Keep going! You're creating a healthy habit."
+                  : 'Complete a morning alarm to begin.'}
               </Text>
             </View>
-
-            <Text style={styles.streakArrow}>›</Text>
           </View>
 
           {/* Tip */}
@@ -201,401 +325,445 @@ const MorningDashboardScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
 
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
 
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 15,
-  },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 15,
+    },
 
-  headerSmall: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.muted,
-    letterSpacing: 1,
-  },
+    headerSmall: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.muted,
+      letterSpacing: 1,
+    },
 
-  headerTitle: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 3,
-  },
+    headerTitle: {
+      fontSize: FONT.headline,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 3,
+    },
 
-  menuButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#F2F2F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    menuButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 21,
+      backgroundColor: colors.divider,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  menuText: {
-    fontSize: 25,
-    color: COLORS.text,
-  },
+    menuText: {
+      fontSize: 25,
+      color: colors.text,
+    },
 
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 25,
-  },
+    scrollContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 25,
+    },
 
-  greetingCard: {
-    backgroundColor: '#FFF8E8',
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+    weatherCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 16,
+      marginTop: 6,
+      borderWidth: 1,
+      borderColor: colors.divider,
+    },
 
-  greetingIcon: {
-    width: 45,
-    height: 45,
-    borderRadius: 23,
-    backgroundColor: '#F5E4B7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    weatherMain: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
 
-  greetingIconText: {
-    fontSize: 23,
-    color: COLORS.accent,
-  },
+    weatherTempRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
 
-  greetingContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
+    weatherIcon: {
+      fontSize: 32,
+      marginRight: 8,
+    },
 
-  greetingTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    weatherTemp: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  greetingText: {
-    fontSize: 12,
-    color: COLORS.muted,
-    lineHeight: 17,
-    marginTop: 3,
-  },
+    weatherInfo: {
+      flex: 1,
+      marginLeft: 12,
+    },
 
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 23,
-    marginBottom: 10,
-  },
+    weatherCity: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  summaryCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    padding: 18,
-  },
+    weatherCondition: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 2,
+    },
 
-  summaryMain: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+    weatherRefreshBtn: {
+      padding: 8,
+      borderRadius: 12,
+      backgroundColor: colors.card,
+    },
 
-  summaryTime: {
-    fontSize: 34,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    weatherRefreshIcon: {
+      fontSize: 14,
+      color: colors.muted,
+    },
 
-  summaryPeriod: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
+    weatherDivider: {
+      height: 1,
+      backgroundColor: colors.divider,
+      marginVertical: 12,
+    },
 
-  completedBadge: {
-    backgroundColor: '#EAF7E9',
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
+    weatherFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
 
-  completedBadgeText: {
-    fontSize: 8,
-    fontWeight: '800',
-    color: '#4CAF50',
-    letterSpacing: 0.6,
-  },
+    weatherMeta: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.muted,
+    },
 
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.divider,
-    marginVertical: 15,
-  },
+    weatherUpdated: {
+      fontSize: 10,
+      color: colors.muted,
+    },
 
-  summaryDetails: {
-    flexDirection: 'row',
-  },
+    sectionTitle: {
+      fontSize: FONT.bodyLg,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 23,
+      marginBottom: 10,
+    },
 
-  summaryItem: {
-    flex: 1,
-  },
+    summaryCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 18,
+    },
 
-  summaryLabel: {
-    fontSize: 8,
-    fontWeight: '700',
-    color: COLORS.muted,
-    letterSpacing: 0.7,
-  },
+    summaryMain: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
 
-  summaryValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginTop: 4,
-  },
+    summaryTime: {
+      fontSize: 34,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  scoreCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    padding: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+    summaryPeriod: {
+      fontSize: 13,
+      fontWeight: '700',
+    },
 
-  scoreCircle: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-    borderWidth: 5,
-    borderColor: COLORS.accent,
-    backgroundColor: '#FFF8E8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
+    completedBadge: {
+      backgroundColor: colors.accentSoft,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 10,
+    },
 
-  scoreNumber: {
-    fontSize: 25,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    completedBadgeText: {
+      fontSize: FONT.caption,
+      fontWeight: '800',
+      color: colors.success,
+      letterSpacing: 0.6,
+    },
 
-  scoreOutOf: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 11,
-  },
+    divider: {
+      height: 1,
+      backgroundColor: colors.divider,
+      marginVertical: 15,
+    },
 
-  scoreContent: {
-    flex: 1,
-    marginLeft: 15,
-  },
+    summaryDetails: {
+      flexDirection: 'row',
+    },
 
-  scoreTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    summaryItem: {
+      flex: 1,
+    },
 
-  scoreDescription: {
-    fontSize: 12,
-    color: COLORS.muted,
-    lineHeight: 17,
-    marginTop: 4,
-  },
+    summaryLabel: {
+      fontSize: FONT.caption,
+      fontWeight: '700',
+      color: colors.muted,
+      letterSpacing: 0.7,
+    },
 
-  scoreProgressBackground: {
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: COLORS.divider,
-    marginTop: 10,
-    overflow: 'hidden',
-  },
+    summaryValue: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+      marginTop: 4,
+    },
 
-  scoreProgress: {
-    width: '82%',
-    height: '100%',
-    backgroundColor: COLORS.accent,
-  },
+    scoreCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 18,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
 
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 23,
-    marginBottom: 10,
-  },
+    scoreBadgeWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  sectionHeaderTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    scoreCircle: {
+      width: 90,
+      height: 90,
+      borderRadius: 45,
+      borderWidth: 5,
+      borderColor: colors.accent,
+      backgroundColor: colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  routineCount: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.accent,
-  },
+    scoreNumber: {
+      fontSize: 25,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  habitsCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    paddingHorizontal: 15,
-  },
+    scoreOutOf: {
+      fontSize: 10,
+      color: colors.accent,
+      fontWeight: '700',
+      marginTop: 2,
+      letterSpacing: 0.5,
+    },
 
-  habitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 13,
-  },
+    scoreContent: {
+      flex: 1,
+      marginLeft: 15,
+    },
 
-  habitIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#F7F7F7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    scoreTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  habitIconCompleted: {
-    backgroundColor: '#FFF8E8',
-  },
+    scoreDescription: {
+      fontSize: 12,
+      color: colors.muted,
+      lineHeight: 17,
+      marginTop: 4,
+    },
 
-  habitIconText: {
-    fontSize: 17,
-  },
+    scoreProgressBackground: {
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: colors.divider,
+      marginTop: 10,
+      overflow: 'hidden',
+    },
 
-  habitContent: {
-    flex: 1,
-    marginLeft: 11,
-  },
+    scoreProgress: {
+      width: '82%',
+      height: '100%',
+      backgroundColor: colors.accent,
+    },
 
-  habitTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 23,
+      marginBottom: 10,
+    },
 
-  habitTitleCompleted: {
-    textDecorationLine: 'line-through',
-    color: COLORS.muted,
-  },
+    sectionHeaderTitle: {
+      fontSize: FONT.bodyLg,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  habitDescription: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 3,
-  },
+    routineCount: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.accent,
+    },
 
-  checkbox: {
-    width: 23,
-    height: 23,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#D5D5D5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    habitsCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      paddingHorizontal: 15,
+    },
 
-  checkboxCompleted: {
-    borderColor: COLORS.accent,
-    backgroundColor: COLORS.accent,
-  },
+    habitRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 13,
+    },
 
-  checkmark: {
-    color: COLORS.surface,
-    fontSize: 13,
-    fontWeight: '700',
-  },
+    habitIcon: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: colors.divider,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  habitDivider: {
-    height: 1,
-    backgroundColor: COLORS.divider,
-  },
+    habitIconCompleted: {
+      backgroundColor: colors.accentSoft,
+    },
 
-  streakCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 18,
-    padding: 15,
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+    habitIconText: {
+      fontSize: 17,
+    },
 
-  streakIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#FFF3E5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    habitContent: {
+      flex: 1,
+      marginLeft: 11,
+    },
 
-  streakIconText: {
-    fontSize: 20,
-  },
+    habitTitle: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+    },
 
-  streakContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
+    habitTitleCompleted: {
+      textDecorationLine: 'line-through',
+      color: colors.muted,
+    },
 
-  streakTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    habitDescription: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 3,
+    },
 
-  streakDescription: {
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 3,
-  },
+    checkbox: {
+      width: 23,
+      height: 23,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: colors.softBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  streakArrow: {
-    fontSize: 23,
-    color: COLORS.muted,
-  },
+    checkboxCompleted: {
+      borderColor: colors.accent,
+      backgroundColor: colors.accent,
+    },
 
-  tipCard: {
-    backgroundColor: '#F8F8F8',
-    borderRadius: 18,
-    padding: 16,
-    marginTop: 12,
-  },
+    checkmark: {
+      color: colors.onAccent,
+      fontSize: 13,
+      fontWeight: '700',
+    },
 
-  tipLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: COLORS.accent,
-  },
+    habitDivider: {
+      height: 1,
+      backgroundColor: colors.divider,
+    },
 
-  tipText: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: COLORS.muted,
-    marginTop: 7,
-  },
+    streakCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 15,
+      marginTop: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
 
-  bottomSpace: {
-    height: 30,
-  },
-});
+    streakIcon: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    streakIconText: {
+      fontSize: 20,
+    },
+
+    streakContent: {
+      flex: 1,
+      marginLeft: 12,
+    },
+
+    streakTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    streakDescription: {
+      fontSize: 12,
+      color: colors.muted,
+      marginTop: 3,
+    },
+
+    tipCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 16,
+      marginTop: 12,
+    },
+
+    tipLabel: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 1,
+      color: colors.accent,
+    },
+
+    tipText: {
+      fontSize: 12,
+      lineHeight: 18,
+      color: colors.muted,
+      marginTop: 7,
+    },
+
+    bottomSpace: {
+      height: 120,
+    },
+  });
 
 export default MorningDashboardScreen;

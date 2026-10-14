@@ -7,11 +7,13 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS } from '../../theme';
+import PrimaryButton from '../../components/PrimaryButton';
+import { useThemeColors } from '../../store/ThemeContext';
+import { FONT, type ThemeColors } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
+import { isValidEmail } from '../../utils/validation';
 import {
   getAuthErrorMessage,
   signInWithGoogle,
@@ -48,6 +50,11 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const goBackToApp = () => {
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Main');
+  };
+
   const handleSignup = async () => {
     const normalizedName = fullName.trim();
     const normalizedEmail = email.trim().toLowerCase();
@@ -55,8 +62,8 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
       Alert.alert('Missing details', 'Please enter your name, email, and password.');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      Alert.alert('Invalid email', 'Please enter a valid email address.');
+    if (!isValidEmail(normalizedEmail)) {
+      Alert.alert('Invalid email', 'Enter a valid email address, for example name@example.com.');
       return;
     }
     if (password.length < 6) {
@@ -70,7 +77,9 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
     setLoading(true);
     try {
       await signUp(normalizedName, normalizedEmail, password, selectedPersona);
-      navigation.replace('Main');
+      Alert.alert('Account created', 'Your Wakely account is ready.', [
+        { text: 'Continue', onPress: goBackToApp },
+      ]);
     } catch (error: unknown) {
       Alert.alert('Signup failed', getAuthErrorMessage(error));
     } finally {
@@ -86,7 +95,10 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
     setLoading(true);
     try {
       const user = await signInWithGoogle(selectedPersona);
-      if (user) navigation.replace('Main');
+      if (!user) return; // The account chooser was dismissed.
+      Alert.alert('Account ready', `Welcome${user.displayName ? `, ${user.displayName}` : ''}!`, [
+        { text: 'Continue', onPress: goBackToApp },
+      ]);
     } catch (error) {
       Alert.alert('Google sign in failed', getAuthErrorMessage(error));
     } finally {
@@ -102,14 +114,25 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
   };
 
   const passwordStrength = getPasswordStrength();
+  const colors = useThemeColors();
+  const styles = createStyles(colors);
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Close sign up"
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          onPress={() => navigation.goBack()}
+          style={styles.close}
+        >
+          <Text style={styles.closeText}>✕</Text>
+        </TouchableOpacity>
         {/* Header */}
         <Text style={styles.title}>Create Account</Text>
 
-        <Text style={styles.subtitle}>Start your journey to energizing morning routines</Text>
+        <Text style={styles.subtitle}>Build a morning routine that sticks</Text>
 
         {/* Social Login */}
         <View style={styles.socialRow}>
@@ -119,12 +142,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
             disabled={loading}
           >
             <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.socialText}>Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.appleIcon}>●</Text>
-            <Text style={styles.socialText}>Apple</Text>
+            <Text style={styles.socialText}>Continue with Google</Text>
           </TouchableOpacity>
         </View>
 
@@ -136,8 +154,8 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
 
           <TextInput
             style={styles.input}
-            placeholder="Indrabhan"
-            placeholderTextColor="#AAAAAA"
+            placeholder="Alex Morgan"
+            placeholderTextColor={colors.muted}
             autoCapitalize="words"
             value={fullName}
             onChangeText={setFullName}
@@ -153,8 +171,8 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
 
           <TextInput
             style={styles.input}
-            placeholder="indrabhan919@gmail.com"
-            placeholderTextColor="#AAAAAA"
+            placeholder="alex@example.com"
+            placeholderTextColor={colors.muted}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -174,7 +192,7 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
           <TextInput
             style={styles.input}
             placeholder="••••••••"
-            placeholderTextColor="#AAAAAA"
+            placeholderTextColor={colors.muted}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -204,9 +222,9 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
 
         {/* Sleep Persona */}
         <View style={styles.personaHeader}>
-          <Text style={styles.sectionTitle}>Select Your Sleep Persona</Text>
+          <Text style={styles.sectionTitle}>Your sleep style</Text>
 
-          <Text style={styles.tailorText}>Tailors Alarm</Text>
+          <Text style={styles.tailorText}>Personalizes alarms</Text>
         </View>
 
         <View style={styles.personaRow}>
@@ -239,6 +257,9 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
           onPress={() => setAcceptedTerms(!acceptedTerms)}
           activeOpacity={0.8}
           disabled={loading}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: acceptedTerms }}
+          accessibilityLabel="Agree to Terms and Privacy Policy"
         >
           <View style={[styles.checkbox, acceptedTerms && styles.checkboxSelected]}>
             {acceptedTerms && <Text style={styles.check}>✓</Text>}
@@ -248,23 +269,24 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
         </TouchableOpacity>
 
         {/* Create Account */}
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={handleSignup}
-          activeOpacity={0.8}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color={COLORS.text} />
-          ) : (
-            <Text style={styles.primaryText}>Create Free Account →</Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.cta}>
+          <PrimaryButton
+            label="Create free account →"
+            accessibilityLabel="Create free account"
+            loading={loading}
+            onPress={handleSignup}
+            accessibilityHint="Creates your account and returns to the app"
+          />
+        </View>
 
         {/* Sign In */}
         <Text style={styles.bottomText}>
           Already registered?{' '}
-          <Text style={styles.signInLink} onPress={() => navigation.goBack()} disabled={loading}>
+          <Text
+            style={styles.signInLink}
+            onPress={() => navigation.goBack()}
+            accessibilityRole="link"
+          >
             Sign In
           </Text>
         </Text>
@@ -273,255 +295,245 @@ export default function SignupScreen({ navigation }: RootScreenProps<'Signup'>) 
   );
 }
 
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    safe: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
 
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingVertical: 24,
-  },
+    container: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 24,
+    },
 
-  title: {
-    textAlign: 'center',
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    close: { alignSelf: 'flex-end', padding: 12 },
+    closeText: { fontSize: FONT.bodyLg, color: colors.muted, fontWeight: '700' },
 
-  subtitle: {
-    textAlign: 'center',
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 5,
-    marginBottom: 20,
-  },
+    title: {
+      textAlign: 'center',
+      fontSize: FONT.title,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  socialRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
+    subtitle: {
+      textAlign: 'center',
+      fontSize: FONT.body,
+      color: colors.muted,
+      marginTop: 5,
+      marginBottom: 20,
+    },
 
-  socialButton: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 9,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-    backgroundColor: COLORS.surface,
-  },
+    socialRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 16,
+    },
 
-  googleIcon: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#4285F4',
-  },
+    socialButton: {
+      flex: 1,
+      minHeight: 48,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 9,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 7,
+      backgroundColor: colors.surface,
+      paddingVertical: 12,
+    },
 
-  appleIcon: {
-    fontSize: 12,
-    color: '#222222',
-  },
+    googleIcon: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: '#4285F4',
+    },
 
-  socialText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
+    socialText: {
+      fontSize: FONT.body,
+      fontWeight: '600',
+      color: colors.text,
+    },
 
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 5,
-    marginTop: 3,
-  },
+    label: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 5,
+      marginTop: 3,
+    },
 
-  inputWrapper: {
-    height: 42,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 9,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    marginBottom: 9,
-    backgroundColor: COLORS.surface,
-  },
+    inputWrapper: {
+      minHeight: 48,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 9,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      marginBottom: 9,
+      backgroundColor: colors.surface,
+    },
 
-  inputIcon: {
-    width: 22,
-    fontSize: 13,
-    color: '#777777',
-  },
+    inputIcon: {
+      width: 22,
+      fontSize: FONT.body,
+      color: colors.tabInactive,
+    },
 
-  input: {
-    flex: 1,
-    height: '100%',
-    fontSize: 12,
-    color: COLORS.text,
-    paddingVertical: 0,
-  },
+    input: {
+      flex: 1,
+      height: '100%',
+      fontSize: FONT.body,
+      color: colors.text,
+      paddingVertical: 0,
+    },
 
-  passwordStrengthRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: -4,
-    marginBottom: 5,
-  },
+    passwordStrengthRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: -4,
+      marginBottom: 5,
+    },
 
-  passwordStrengthLabel: {
-    fontSize: 12,
-    color: COLORS.muted,
-  },
+    passwordStrengthLabel: {
+      fontSize: 12,
+      color: colors.muted,
+    },
 
-  passwordStrength: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
+    passwordStrength: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
 
-  strong: {
-    color: '#4F9B78',
-  },
+    strong: {
+      color: colors.success,
+    },
 
-  medium: {
-    color: '#C48A25',
-  },
+    medium: {
+      color: colors.accent,
+    },
 
-  weak: {
-    color: '#B84A4A',
-  },
+    weak: {
+      color: colors.danger,
+    },
 
-  personaHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 5,
-    marginBottom: 7,
-  },
+    personaHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 5,
+      marginBottom: 7,
+    },
 
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    sectionTitle: {
+      fontSize: FONT.body,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  tailorText: {
-    fontSize: 12,
-    color: COLORS.accent,
-    fontWeight: '600',
-  },
+    tailorText: {
+      fontSize: 12,
+      color: colors.accent,
+      fontWeight: '600',
+    },
 
-  personaRow: {
-    flexDirection: 'row',
-    gap: 7,
-    marginBottom: 13,
-  },
+    personaRow: {
+      flexDirection: 'row',
+      gap: 7,
+      marginBottom: 13,
+    },
 
-  personaCard: {
-    flex: 1,
-    minHeight: 62,
-    borderWidth: 1,
-    borderColor: COLORS.softBorder,
-    borderRadius: 9,
-    backgroundColor: '#FFFDF8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
+    personaCard: {
+      flex: 1,
+      minHeight: 62,
+      borderWidth: 1,
+      borderColor: colors.softBorder,
+      borderRadius: 9,
+      backgroundColor: colors.card,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 3,
+    },
 
-  personaCardSelected: {
-    borderColor: COLORS.accent,
-    backgroundColor: '#FFF8E8',
-  },
+    personaCardSelected: {
+      borderColor: colors.accent,
+      backgroundColor: colors.accentSoft,
+    },
 
-  personaIcon: {
-    fontSize: 13,
-    marginBottom: 3,
-  },
+    personaIcon: {
+      fontSize: FONT.body,
+      marginBottom: 3,
+    },
 
-  personaTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.text,
-    textAlign: 'center',
-  },
+    personaTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+    },
 
-  personaTitleSelected: {
-    color: COLORS.accent,
-  },
+    personaTitleSelected: {
+      color: colors.accent,
+    },
 
-  personaSubtitle: {
-    fontSize: 7,
-    color: COLORS.muted,
-    textAlign: 'center',
-    marginTop: 2,
-  },
+    personaSubtitle: {
+      fontSize: 12,
+      color: colors.muted,
+      textAlign: 'center',
+      marginTop: 2,
+    },
 
-  termsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 13,
-  },
+    termsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 13,
+      minHeight: 44,
+    },
 
-  checkbox: {
-    width: 15,
-    height: 15,
-    borderWidth: 1,
-    borderColor: '#999999',
-    borderRadius: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 7,
-  },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderWidth: 1,
+      borderColor: colors.tabInactive,
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 7,
+    },
 
-  checkboxSelected: {
-    backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
-  },
+    checkboxSelected: {
+      backgroundColor: colors.accent,
+      borderColor: colors.accent,
+    },
 
-  check: {
-    color: COLORS.surface,
-    fontSize: 12,
-    fontWeight: '800',
-  },
+    check: {
+      color: colors.onAccent,
+      fontSize: 12,
+      fontWeight: '800',
+    },
 
-  termsText: {
-    fontSize: 12,
-    color: COLORS.muted,
-  },
+    termsText: {
+      fontSize: 12,
+      color: colors.muted,
+    },
 
-  primaryButton: {
-    height: 45,
-    borderRadius: 10,
-    backgroundColor: COLORS.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    cta: { marginTop: 4 },
 
-  primaryText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
+    bottomText: {
+      textAlign: 'center',
+      color: colors.muted,
+      marginTop: 17,
+      fontSize: 12,
+      paddingVertical: 12,
+    },
 
-  bottomText: {
-    textAlign: 'center',
-    color: COLORS.muted,
-    marginTop: 17,
-    fontSize: 12,
-  },
-
-  signInLink: {
-    color: COLORS.accent,
-    fontWeight: '700',
-  },
-});
+    signInLink: {
+      color: colors.accent,
+      fontWeight: '700',
+    },
+  });

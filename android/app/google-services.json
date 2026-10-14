@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "287845974246-8o5f418sgi6cfeeoemp550bpmt2lgjns.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alarmyapp",
+            "certificate_hash": "f94cf4062792dad2b180aa79259cce12ff06e220"
+          }
+        },
+        {
           "client_id": "287845974246-gtcig753tq7h5ecipd8f0m6nju131of1.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

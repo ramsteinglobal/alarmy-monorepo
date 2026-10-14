@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold-start cover: Wakely yellow. The JS SplashScreen continues on the
+     same yellow so launch feels like one seamless brand moment. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/wakely_yellow" />
+</layer-list>

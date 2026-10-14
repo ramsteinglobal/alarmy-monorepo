@@ -1,5 +1,5 @@
 {
-  "name": "Alarmy Android Build Environment",
+  "name": "Wakely Android Build Environment",
   "image": "ghcr.io/cirruslabs/android-sdk:35",
   "features": {
     "ghcr.io/devcontainers/features/java:1": {

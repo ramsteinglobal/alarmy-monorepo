@@ -1,18 +1,26 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { COLORS, FONT, RADIUS } from '../theme';
-import MissionCard, { missionStyles } from './MissionCard';
+import { FONT, RADIUS, type ThemeColors } from '../theme';
+import { useThemeColors } from '../store/ThemeContext';
+import MissionCard, { createMissionStyles } from './MissionCard';
 import type { MissionProps } from './types';
 
 const SYMBOLS = ['●', '▲', '■', '★', '◆', '♥'];
-const LENGTH = 4;
 const SHOW_MS = 3000;
 
-const makeSequence = () =>
-  Array.from({ length: LENGTH }, () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+const makeSequence = (length: number) =>
+  Array.from({ length }, () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
 
-export default function MemoryMission({ onComplete }: MissionProps) {
-  const [sequence, setSequence] = useState(makeSequence);
+export default function MemoryMission({
+  onComplete,
+  onProgress,
+  length = 4,
+}: MissionProps & { length?: number }) {
+  const colors = useThemeColors();
+  const styles = createStyles(colors);
+  const missionStyles = createMissionStyles(colors);
+  const total = Math.max(3, Math.min(6, Math.round(length)));
+  const [sequence, setSequence] = useState(() => makeSequence(total));
   const [phase, setPhase] = useState<'show' | 'recall'>('show');
   const [entered, setEntered] = useState<string[]>([]);
   const [error, setError] = useState(false);
@@ -25,17 +33,18 @@ export default function MemoryMission({ onComplete }: MissionProps) {
   }, [phase, sequence]);
 
   const restart = useCallback(() => {
-    setSequence(makeSequence());
+    setSequence(makeSequence(total));
     setEntered([]);
     setError(true);
     setPhase('show');
-  }, []);
+  }, [total]);
 
   const press = (symbol: string) => {
     const next = [...entered, symbol];
     setEntered(next);
     setError(false);
-    if (next.length === LENGTH) {
+    onProgress?.(Math.min(next.length / total, 1));
+    if (next.length === total) {
       if (next.every((s, i) => s === sequence[i])) onComplete();
       else restart();
     }
@@ -46,7 +55,7 @@ export default function MemoryMission({ onComplete }: MissionProps) {
       <MissionCard
         label={phase === 'show' ? 'REMEMBER' : 'REPEAT THE SEQUENCE'}
         hint={
-          phase === 'show' ? 'It will disappear in a moment.' : `Tap ${LENGTH} symbols in order.`
+          phase === 'show' ? 'It will disappear in a moment.' : `Tap ${total} symbols in order.`
         }
       >
         <Text
@@ -57,7 +66,7 @@ export default function MemoryMission({ onComplete }: MissionProps) {
         >
           {phase === 'show'
             ? sequence.join('  ')
-            : entered.concat(Array(LENGTH - entered.length).fill('·')).join('  ')}
+            : entered.concat(Array(total - entered.length).fill('·')).join('  ')}
         </Text>
       </MissionCard>
 
@@ -82,24 +91,25 @@ export default function MemoryMission({ onComplete }: MissionProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  sequence: { fontSize: 40, letterSpacing: 4, color: COLORS.accent, marginTop: 10 },
-  pad: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 10,
-    marginTop: 20,
-  },
-  key: {
-    width: '30%',
-    minHeight: 64,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.softBorder,
-    backgroundColor: COLORS.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  keyText: { fontSize: FONT.title + 6, color: COLORS.text },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    sequence: { fontSize: 40, letterSpacing: 4, color: colors.accent, marginTop: 10 },
+    pad: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      gap: 10,
+      marginTop: 20,
+    },
+    key: {
+      width: '30%',
+      minHeight: 64,
+      borderRadius: RADIUS.md,
+      borderWidth: 1,
+      borderColor: colors.softBorder,
+      backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    keyText: { fontSize: FONT.title + 6, color: colors.text },
+  });

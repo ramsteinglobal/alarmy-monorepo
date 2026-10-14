@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 import PrimaryButton from '../components/PrimaryButton';
-import { COLORS } from '../theme';
+import { useThemeColors } from '../store/ThemeContext';
 import MissionCard from './MissionCard';
 import type { MissionProps } from './types';
 
@@ -14,9 +14,8 @@ type Props = MissionProps & {
 };
 
 /**
- * Shake and squat share this screen.
- * TODO: count real movement with the accelerometer (react-native-sensors) instead
- * of button taps. The tap button is a placeholder, and anyone can tap it half asleep.
+ * Tap-to-count missions: squat and tap challenge. Shake has its own
+ * accelerometer mission (ShakeMission) with this as fallback.
  */
 export default function CounterMission({
   icon,
@@ -28,6 +27,7 @@ export default function CounterMission({
   onProgress,
 }: Props) {
   const [count, setCount] = useState(0);
+  const colors = useThemeColors();
 
   const increment = () => {
     const next = count + 1;
@@ -41,7 +41,7 @@ export default function CounterMission({
       <MissionCard icon={icon} title={title} hint={description}>
         <Text
           accessibilityLiveRegion="polite"
-          style={{ marginTop: 10, fontSize: 36, fontWeight: '700', color: COLORS.accent }}
+          style={{ marginTop: 10, fontSize: 36, fontWeight: '700', color: colors.accent }}
         >
           {count} / {target}
         </Text>

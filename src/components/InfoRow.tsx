@@ -1,11 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { COLORS, FONT } from '../theme';
+import { FONT, SPACING, type ThemeColors } from '../theme';
+import { useThemeColors } from '../store/ThemeContext';
 
 type Props = { icon: string; label: string; value: string; description?: string };
 
 /** Icon + small label + value (+ optional description). Used on ringing, summary and success. */
 export default function InfoRow({ icon, label, value, description }: Props) {
+  const styles = createStyles(useThemeColors());
   return (
     <View
       style={styles.row}
@@ -24,20 +26,21 @@ export default function InfoRow({ icon, label, value, description }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  iconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: COLORS.iconBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  icon: { fontSize: FONT.title, fontWeight: '700', color: COLORS.accent },
-  content: { flex: 1 },
-  label: { fontSize: FONT.caption, fontWeight: '700', letterSpacing: 1.2, color: COLORS.muted },
-  value: { marginTop: 3, fontSize: 15, fontWeight: '700', color: COLORS.text },
-  description: { marginTop: 2, fontSize: FONT.caption, color: COLORS.muted },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm },
+    iconBox: {
+      width: 42,
+      height: 42,
+      borderRadius: 12,
+      backgroundColor: colors.iconBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    icon: { fontSize: FONT.title, fontWeight: '700', color: colors.accent },
+    content: { flex: 1 },
+    label: { fontSize: FONT.caption, fontWeight: '700', letterSpacing: 1.5, color: colors.muted },
+    value: { marginTop: 3, fontSize: FONT.bodyLg, fontWeight: '700', color: colors.text },
+    description: { marginTop: 2, fontSize: FONT.caption, color: colors.muted },
+  });

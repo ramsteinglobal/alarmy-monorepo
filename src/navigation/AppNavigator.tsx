@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import { COLORS } from '../theme';
+import { useThemeColors } from '../store/ThemeContext';
+import { FONT } from '../theme';
 import type {
   AlarmStackParamList,
   MainTabParamList,
@@ -15,27 +16,34 @@ import type {
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 
-// Alarm
+// Alarm creation flow (inside tabs)
 import AlarmDashboard from '../screens/alarm/AlarmDashboard';
 import CreateAlarmScreen from '../screens/alarm/CreateAlarmScreen';
 import SelectSoundScreen from '../screens/alarm/SelectSoundScreen';
 import SelectMissionScreen from '../screens/alarm/SelectMissionScreen';
 import AlarmSummaryScreen from '../screens/alarm/AlarmSummaryScreen';
+
+// Alarm execution screens (full-screen, outside tabs)
 import AlarmRingingScreen from '../screens/alarm/AlarmRingingScreen';
 import MissionExecutionScreen from '../screens/alarm/MissionExecutionScreen';
 import AlarmSuccessScreen from '../screens/alarm/AlarmSuccessScreen';
+import WakeCheckScreen from '../screens/alarm/WakeCheckScreen';
 
 // Other modules
 import SleepDashboardScreen from '../screens/sleep/SleepDashboardScreen';
 import MorningDashboardScreen from '../screens/morning/MorningDashboardScreen';
 import ReportDashboardScreen from '../screens/report/ReportDashboardScreen';
 import SettingsDashboardScreen from '../screens/settings/SettingsDashboardScreen';
+import SplashScreen from '../screens/SplashScreen';
+import { useAuth } from '../store/AuthContext';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AlarmStack = createNativeStackNavigator<AlarmStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// ALARM NAVIGATOR
+// ALARM CREATION NAVIGATOR
+// Only contains the alarm setup flow.
+// Execution screens live on the root stack.
 function AlarmNavigator() {
   return (
     <AlarmStack.Navigator
@@ -44,39 +52,43 @@ function AlarmNavigator() {
         headerShown: false,
       }}
     >
-      <AlarmStack.Screen name="AlarmDashboard" component={AlarmDashboard} />
-
-      <AlarmStack.Screen name="CreateAlarm" component={CreateAlarmScreen} />
-
-      <AlarmStack.Screen name="SelectSound" component={SelectSoundScreen} />
-
-      <AlarmStack.Screen name="SelectMission" component={SelectMissionScreen} />
-
-      <AlarmStack.Screen name="AlarmSummary" component={AlarmSummaryScreen} />
-
       <AlarmStack.Screen
-        name="AlarmRinging"
-        component={AlarmRingingScreen}
-        options={{ gestureEnabled: false }}
+        name="AlarmDashboard"
+        component={AlarmDashboard}
       />
-
       <AlarmStack.Screen
-        name="MissionExecution"
-        component={MissionExecutionScreen}
-        options={{ gestureEnabled: false }}
+        name="CreateAlarm"
+        component={CreateAlarmScreen}
       />
-
-      <AlarmStack.Screen name="AlarmSuccess" component={AlarmSuccessScreen} />
+      <AlarmStack.Screen
+        name="SelectSound"
+        component={SelectSoundScreen}
+      />
+      <AlarmStack.Screen
+        name="SelectMission"
+        component={SelectMissionScreen}
+      />
+      <AlarmStack.Screen
+        name="AlarmSummary"
+        component={AlarmSummaryScreen}
+      />
     </AlarmStack.Navigator>
   );
 }
 
 // TAB ICON
-function TabIcon({ text }: { text: string }) {
+function TabIcon({
+  text,
+  color,
+}: {
+  text: string;
+  color: string;
+}) {
   return (
     <Text
       style={{
         fontSize: 18,
+        color,
       }}
     >
       {text}
@@ -86,24 +98,25 @@ function TabIcon({ text }: { text: string }) {
 
 // MAIN TABS
 function MainTabs() {
-  // Edge-to-edge: lift the tab bar above the system navigation bar (3-button or gesture).
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
+
   return (
     <Tab.Navigator
       initialRouteName="Alarm"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.accent,
-        tabBarInactiveTintColor: COLORS.tabInactive,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
           height: 60 + insets.bottom,
           paddingTop: 6,
           paddingBottom: 8 + insets.bottom,
-          backgroundColor: COLORS.surface,
-          borderTopColor: COLORS.divider,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.divider,
         },
         tabBarLabelStyle: {
-          fontSize: 9,
+          fontSize: FONT.caption,
         },
       }}
     >
@@ -112,7 +125,9 @@ function MainTabs() {
         component={AlarmNavigator}
         options={{
           tabBarLabel: 'Alarm',
-          tabBarIcon: () => <TabIcon text="◷" />,
+          tabBarIcon: ({ color }) => (
+            <TabIcon text="◷" color={color} />
+          ),
         }}
       />
 
@@ -121,7 +136,9 @@ function MainTabs() {
         component={SleepDashboardScreen}
         options={{
           tabBarLabel: 'Sleep',
-          tabBarIcon: () => <TabIcon text="☾" />,
+          tabBarIcon: ({ color }) => (
+            <TabIcon text="☾" color={color} />
+          ),
         }}
       />
 
@@ -130,7 +147,9 @@ function MainTabs() {
         component={MorningDashboardScreen}
         options={{
           tabBarLabel: 'Morning',
-          tabBarIcon: () => <TabIcon text="☀" />,
+          tabBarIcon: ({ color }) => (
+            <TabIcon text="☀" color={color} />
+          ),
         }}
       />
 
@@ -139,7 +158,9 @@ function MainTabs() {
         component={ReportDashboardScreen}
         options={{
           tabBarLabel: 'Report',
-          tabBarIcon: () => <TabIcon text="▥" />,
+          tabBarIcon: ({ color }) => (
+            <TabIcon text="▥" color={color} />
+          ),
         }}
       />
 
@@ -148,7 +169,9 @@ function MainTabs() {
         component={SettingsDashboardScreen}
         options={{
           tabBarLabel: 'Settings',
-          tabBarIcon: () => <TabIcon text="⚙" />,
+          tabBarIcon: ({ color }) => (
+            <TabIcon text="⚙" color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -156,17 +179,85 @@ function MainTabs() {
 }
 
 // ROOT NAVIGATOR
+// Guest-first: Main is always accessible.
+// Login and Signup are presented as modals.
+// Alarm execution screens live on the root stack to cover the tab bar.
 export default function AppNavigator() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return <SplashScreen />;
+  }
+
   return (
     <RootStack.Navigator
-      initialRouteName="Login"
+      initialRouteName="Main"
       screenOptions={{
         headerShown: false,
       }}
     >
-      <RootStack.Screen name="Login" component={LoginScreen} />
-      <RootStack.Screen name="Signup" component={SignupScreen} />
-      <RootStack.Screen name="Main" component={MainTabs} />
+      {/* Normal app screens */}
+      <RootStack.Screen
+        name="Main"
+        component={MainTabs}
+      />
+
+      <RootStack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{
+          presentation: 'modal',
+        }}
+      />
+
+      <RootStack.Screen
+        name="Signup"
+        component={SignupScreen}
+        options={{
+          presentation: 'modal',
+        }}
+      />
+
+      {/* Alarm execution: full-screen, no tab bar, no swipe-back */}
+      <RootStack.Screen
+        name="AlarmRinging"
+        component={AlarmRingingScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: false,
+          animation: 'fade',
+        }}
+      />
+
+      <RootStack.Screen
+        name="MissionExecution"
+        component={MissionExecutionScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: false,
+          animation: 'slide_from_bottom',
+        }}
+      />
+
+      <RootStack.Screen
+        name="AlarmSuccess"
+        component={AlarmSuccessScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: false,
+          animation: 'fade',
+        }}
+      />
+
+      <RootStack.Screen
+        name="WakeCheck"
+        component={WakeCheckScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: false,
+          animation: 'slide_from_bottom',
+        }}
+      />
     </RootStack.Navigator>
   );
 }

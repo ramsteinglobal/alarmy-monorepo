@@ -2,6 +2,7 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   getAuth,
+  sendPasswordResetEmail,
   signInWithCredential,
   signInWithEmailAndPassword,
   signOut,
@@ -86,8 +87,13 @@ export const signInWithGoogle = async (sleepPersona?: SleepPersona) => {
 
 export const logOut = async () => signOut(firebaseAuth);
 
+export const sendPasswordReset = async (email: string) => {
+  await sendPasswordResetEmail(firebaseAuth, email);
+};
+
 export const getAuthErrorMessage = (error: unknown) => {
   const code = (error as { code?: string })?.code;
+  const message = (error as { message?: string })?.message ?? '';
   switch (code) {
     case 'auth/invalid-email':
       return 'Please enter a valid email address.';
@@ -105,7 +111,26 @@ export const getAuthErrorMessage = (error: unknown) => {
       return 'Could not connect. Check your internet connection and try again.';
     case 'auth/account-exists-with-different-credential':
       return 'An account with this email already exists. Sign in using its original method.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Wait a little while, then try again.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Contact support for help.';
+    case 'auth/requires-recent-login':
+      return 'For your security, sign in again before trying this action.';
+    case 'auth/credential-already-in-use':
+      return 'This sign-in method is already linked to another account.';
+    case 'auth/unauthorized-domain':
+      return 'This app is not authorized for sign-in. Contact support.';
     default:
-      return (error as { message?: string })?.message ?? 'Something went wrong. Please try again.';
+      if (/DEVELOPER_ERROR|developer error|\b12500\b|\b10\b/i.test(`${code ?? ''} ${message}`)) {
+        return 'Google sign-in setup is incomplete for this app build. Check that this build’s Android package name and signing SHA-1 are registered in Firebase, and that Google sign-in is enabled.';
+      }
+      if (/SIGN_IN_CANCELLED|12501|CANCELED/i.test(`${code ?? ''} ${message}`)) {
+        return 'Google sign-in was cancelled.';
+      }
+      if (/network|timeout|unavailable/i.test(`${code ?? ''} ${message}`)) {
+        return 'Could not connect. Check your internet connection and try again.';
+      }
+      return 'Something went wrong. Please try again.';
   }
 };

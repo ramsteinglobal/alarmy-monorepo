@@ -9,30 +9,74 @@ import {
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS } from '../../theme';
+import PrimaryButton from '../../components/PrimaryButton';
+import { useThemeColors } from '../../store/ThemeContext';
+import { FONT, type ThemeColors } from '../../theme';
 import type { RootScreenProps } from '../../types/navigation';
-import { getAuthErrorMessage, signIn, signInWithGoogle } from '../../config/firebaseSetup';
+import { isValidEmail } from '../../utils/validation';
+import {
+  getAuthErrorMessage,
+  sendPasswordReset,
+  signIn,
+  signInWithGoogle,
+} from '../../config/firebaseSetup';
 
 type Props = RootScreenProps<'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
+  const colors = useThemeColors();
+  const styles = createStyles(colors);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const goBackToApp = () => {
+    // Login is pushed on top of Main (guest flow): return to where the
+    // user came from, or to Main if there is nowhere to go back to.
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Main');
+  };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
       const user = await signInWithGoogle();
-      if (user) navigation.replace('Main');
+      if (!user) return; // The account chooser was dismissed.
+      Alert.alert('Signed in', `Welcome${user.displayName ? `, ${user.displayName}` : ' back'}!`, [
+        { text: 'Continue', onPress: goBackToApp },
+      ]);
     } catch (error) {
       Alert.alert('Google sign in failed', getAuthErrorMessage(error));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!isValidEmail(normalizedEmail)) {
+      Alert.alert('Reset password', 'Enter a valid account email above, then tap Forgot?.');
+      return;
+    }
+    Alert.alert('Reset password', `Send a reset link to ${normalizedEmail}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Send link',
+        onPress: async () => {
+          setLoading(true);
+          try {
+            await sendPasswordReset(normalizedEmail);
+            Alert.alert('Link sent', 'Check your inbox for the password reset email.');
+          } catch (error) {
+            Alert.alert('Reset failed', getAuthErrorMessage(error));
+          } finally {
+            setLoading(false);
+          }
+        },
+      },
+    ]);
   };
 
   const handleSignIn = async () => {
@@ -41,14 +85,16 @@ export default function LoginScreen({ navigation }: Props) {
       Alert.alert('Missing details', 'Please enter your email and password.');
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      Alert.alert('Invalid email', 'Please enter a valid email address.');
+    if (!isValidEmail(normalizedEmail)) {
+      Alert.alert('Invalid email', 'Enter a valid email address, for example name@example.com.');
       return;
     }
     setLoading(true);
     try {
-      await signIn(normalizedEmail, password);
-      navigation.replace('Main');
+      const user = await signIn(normalizedEmail, password);
+      Alert.alert('Signed in', `Welcome${user.displayName ? `, ${user.displayName}` : ' back'}!`, [
+        { text: 'Continue', onPress: goBackToApp },
+      ]);
     } catch (error) {
       Alert.alert('Sign in failed', getAuthErrorMessage(error));
     } finally {
@@ -63,25 +109,28 @@ export default function LoginScreen({ navigation }: Props) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.container}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Close sign in"
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            onPress={() => navigation.goBack()}
+            style={styles.close}
+          >
+            <Text style={styles.closeText}>✕</Text>
+          </TouchableOpacity>
           <View style={styles.logo}>
             <Text style={styles.logoText}>✦</Text>
           </View>
 
-          <Text style={styles.title}>Welcome to AlarmyApp</Text>
-          <Text style={styles.subtitle}>
-            Neutralize sleep inertia with smart circadian wake-up routines
-          </Text>
+          <Text style={styles.title}>Welcome to Wakely</Text>
+          <Text style={styles.subtitle}>Wake up when it matters.</Text>
 
           <TouchableOpacity
             style={styles.socialButton}
             onPress={handleGoogleSignIn}
             disabled={loading}
           >
-            <Text style={styles.socialText}>G Continue with Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialText}>● Continue with Apple</Text>
+            <Text style={styles.socialText}>Continue with Google</Text>
           </TouchableOpacity>
 
           <Text style={styles.or}>OR EMAIL</Text>
@@ -90,7 +139,7 @@ export default function LoginScreen({ navigation }: Props) {
           <TextInput
             style={styles.input}
             placeholder="alex@morningmind.com"
-            placeholderTextColor="#AAAAAA"
+            placeholderTextColor={colors.muted}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -102,15 +151,19 @@ export default function LoginScreen({ navigation }: Props) {
 
           <View style={styles.passwordRow}>
             <Text style={styles.label}>Password</Text>
-            <TouchableOpacity>
-              <Text style={styles.forgot}>Forgot?</Text>
+            <TouchableOpacity
+              onPress={handleForgotPassword}
+              disabled={loading}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Text style={styles.forgot}>Forgot password?</Text>
             </TouchableOpacity>
           </View>
 
           <TextInput
             style={styles.input}
             placeholder="••••••••"
-            placeholderTextColor="#AAAAAA"
+            placeholderTextColor={colors.muted}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -119,17 +172,23 @@ export default function LoginScreen({ navigation }: Props) {
             textContentType="password"
           />
 
-          <TouchableOpacity style={styles.primaryButton} onPress={handleSignIn} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color={COLORS.text} />
-            ) : (
-              <Text style={styles.primaryText}>Sign In to AlarmyApp →</Text>
-            )}
-          </TouchableOpacity>
+          <View style={styles.cta}>
+            <PrimaryButton
+              label="Sign in to Wakely →"
+              accessibilityLabel="Sign in to Wakely"
+              loading={loading}
+              onPress={handleSignIn}
+              accessibilityHint="Signs in and returns to the app"
+            />
+          </View>
 
           <Text style={styles.signupText}>
             Don't have an account?{' '}
-            <Text style={styles.signupLink} onPress={() => navigation.navigate('Signup')}>
+            <Text
+              style={styles.signupLink}
+              onPress={() => navigation.navigate('Signup')}
+              accessibilityRole="link"
+            >
               Sign Up Free
             </Text>
           </Text>
@@ -139,91 +198,89 @@ export default function LoginScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.background },
-  flex: { flex: 1 },
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingVertical: 30,
-  },
-  logo: {
-    alignSelf: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  logoText: { fontSize: 24, color: COLORS.accent },
-  title: {
-    textAlign: 'center',
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  subtitle: {
-    textAlign: 'center',
-    fontSize: 12,
-    color: COLORS.muted,
-    marginTop: 6,
-    marginBottom: 22,
-  },
-  socialButton: {
-    height: 42,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-  socialText: { color: COLORS.text, fontSize: 13, fontWeight: '600' },
-  or: {
-    textAlign: 'center',
-    color: COLORS.muted,
-    fontSize: 12,
-    fontWeight: '700',
-    marginVertical: 15,
-  },
-  label: {
-    color: COLORS.text,
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 5,
-  },
-  input: {
-    height: 43,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    fontSize: 13,
-    color: COLORS.text,
-    marginBottom: 14,
-  },
-  passwordRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  forgot: { color: COLORS.accent, fontSize: 12 },
-  primaryButton: {
-    height: 46,
-    borderRadius: 11,
-    backgroundColor: COLORS.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  primaryText: { color: COLORS.text, fontWeight: '700', fontSize: 13 },
-  signupText: {
-    textAlign: 'center',
-    color: COLORS.muted,
-    marginTop: 22,
-    fontSize: 12,
-  },
-  signupLink: { color: COLORS.accent, fontWeight: '700' },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    flex: { flex: 1 },
+    container: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 30,
+    },
+    close: { alignSelf: 'flex-end', padding: 12 },
+    closeText: { fontSize: FONT.bodyLg, color: colors.muted, fontWeight: '700' },
+    logo: {
+      alignSelf: 'center',
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    logoText: { fontSize: 24, color: colors.accent },
+    title: {
+      textAlign: 'center',
+      fontSize: FONT.title,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    subtitle: {
+      textAlign: 'center',
+      fontSize: FONT.body,
+      color: colors.muted,
+      marginTop: 6,
+      marginBottom: 22,
+    },
+    socialButton: {
+      minHeight: 48,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 10,
+      paddingVertical: 12,
+    },
+    socialText: { color: colors.text, fontSize: FONT.body, fontWeight: '600' },
+    or: {
+      textAlign: 'center',
+      color: colors.muted,
+      fontSize: 12,
+      fontWeight: '700',
+      marginVertical: 15,
+    },
+    label: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: '600',
+      marginBottom: 6,
+    },
+    input: {
+      minHeight: 48,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      fontSize: FONT.body,
+      color: colors.text,
+      marginBottom: 14,
+    },
+    passwordRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    forgot: { color: colors.accent, fontSize: 12, paddingVertical: 12 },
+    cta: { marginTop: 4 },
+    signupText: {
+      textAlign: 'center',
+      color: colors.muted,
+      marginTop: 22,
+      fontSize: 12,
+      paddingVertical: 12,
+    },
+    signupLink: { color: colors.accent, fontWeight: '700' },
+  });
