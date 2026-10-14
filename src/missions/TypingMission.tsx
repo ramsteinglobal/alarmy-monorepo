@@ -19,8 +19,7 @@ const SENTENCES = [
   'Wake up, show up, never give up',
 ];
 
-const pickSentence = () =>
-  SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
+const pickSentence = () => SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
 
 const normalise = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
 

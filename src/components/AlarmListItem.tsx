@@ -50,9 +50,7 @@ export default function AlarmListItem({ alarm, onToggle, onEdit, onDelete, onTes
       </View>
 
       <View style={styles.daysRow}>
-        <Text style={styles.days}>
-          {[alarm.label, ringsText].filter(Boolean).join(' · ')}
-        </Text>
+        <Text style={styles.days}>{[alarm.label, ringsText].filter(Boolean).join(' · ')}</Text>
         <View style={[styles.badge, !alarm.enabled && styles.badgeOff]}>
           <Text style={[styles.badgeText, !alarm.enabled && styles.badgeTextOff]}>
             {alarm.enabled ? 'ACTIVE' : 'OFF'}

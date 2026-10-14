@@ -189,7 +189,8 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
           <Card style={styles.guestCard}>
             <Text style={styles.guestTitle}>Sign in to unlock more</Text>
             <Text style={styles.guestText}>
-              Alarms work without an account. Sign in to track sleep, build morning routines, and see your reports.
+              Alarms work without an account. Sign in to track sleep, build morning routines, and
+              see your reports.
             </Text>
           </Card>
         ) : null}
