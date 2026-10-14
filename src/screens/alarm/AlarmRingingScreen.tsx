@@ -5,6 +5,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import Screen from '../../components/Screen';
 import useBlockBack from '../../hooks/useBlockBack';
 import { cancelBackup, promptFixPermissions, snoozeAlarm } from '../../services/alarmScheduler';
+import { playAlarmSound, playAlarmUri, stopSoundPreview } from '../../services/nativeAudio';
 import {
   getMaxSnoozes,
   getMissionChain,
@@ -40,6 +41,31 @@ export default function AlarmRingingScreen({ navigation, route }: RootScreenProp
 
   // An alarm must not be dismissed by the Android back button.
   useBlockBack();
+
+  // Play the alarm through the native STREAM_ALARM so volume buttons
+  // (which control STREAM_MUSIC) cannot mute it.
+  useEffect(() => {
+    const sound = alarm?.sound;
+    if (!sound) return;
+
+    const start = async () => {
+      try {
+        if (sound.id.startsWith('system_') && sound.file) {
+          await playAlarmUri(sound.file);
+        } else if (sound.file) {
+          await playAlarmSound(sound.file);
+        }
+      } catch (err) {
+        console.error('Failed to start native alarm sound:', err);
+      }
+    };
+
+    start();
+
+    return () => {
+      stopSoundPreview().catch(err => console.error('Failed to stop native sound:', err));
+    };
+  }, [alarm?.sound]);
 
   const { time, period } = formatClock(now);
 
