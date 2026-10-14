@@ -40,7 +40,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, statSync, chmodSync, readFileSync } from 'node:fs';
+import { existsSync, statSync, chmodSync, readFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -235,7 +235,7 @@ function generateJsBundle() {
   const resDir = path.join(ANDROID_DIR, 'app', 'src', 'main', 'res');
 
   // Ensure assets dir exists
-  fs.mkdirSync(assetsDir, { recursive: true });
+  mkdirSync(assetsDir, { recursive: true });
 
   console.log('[build-apk] Generating JS bundle (embedded into APK, no Metro needed)...');
 
