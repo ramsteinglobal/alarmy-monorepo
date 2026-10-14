@@ -1,8 +1,9 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, View, Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColors } from '../store/ThemeContext';
 import { FONT } from '../theme';
 import type {
@@ -59,23 +60,39 @@ function AlarmNavigator() {
   );
 }
 
-// TAB ICON
-function TabIcon({ text, color }: { text: string; color: string }) {
+// TAB ICON — soft rounded background when active
+function TabIcon({ text, color, focused }: { text: string; color: string; focused: boolean }) {
+  const colors = useThemeColors();
   return (
-    <Text
-      style={{
-        fontSize: 18,
-        color,
-      }}
+    <View
+      style={[
+        {
+          width: 44,
+          height: 28,
+          borderRadius: 14,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        focused && { backgroundColor: colors.accentSoft },
+      ]}
     >
-      {text}
-    </Text>
+      <Text
+        style={{
+          fontSize: 18,
+          color,
+          lineHeight: 22,
+        }}
+      >
+        {text}
+      </Text>
+    </View>
   );
 }
 
 // MAIN TABS
 function MainTabs() {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       initialRouteName="Alarm"
@@ -84,14 +101,28 @@ function MainTabs() {
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          height: 68,
-          paddingTop: 6,
-          paddingBottom: 8,
+          height: 72 + insets.bottom,
+          paddingTop: 8,
+          paddingBottom: 10 + insets.bottom,
           backgroundColor: colors.surface,
-          borderTopColor: colors.divider,
+          borderTopWidth: 0,
+          elevation: 12,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: Platform.OS === 'ios' ? 0.08 : 0.12,
+          shadowRadius: 12,
         },
         tabBarLabelStyle: {
-          fontSize: FONT.caption,
+          fontSize: 11,
+          fontWeight: '600',
+          letterSpacing: 0.2,
+          marginTop: 2,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 4,
+        },
+        tabBarIconStyle: {
+          marginTop: 2,
         },
       }}
     >
@@ -100,7 +131,7 @@ function MainTabs() {
         component={AlarmNavigator}
         options={{
           tabBarLabel: 'Alarm',
-          tabBarIcon: ({ color }) => <TabIcon text="◷" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon text="◷" color={color} focused={focused} />,
         }}
       />
 
@@ -109,7 +140,7 @@ function MainTabs() {
         component={SleepDashboardScreen}
         options={{
           tabBarLabel: 'Sleep',
-          tabBarIcon: ({ color }) => <TabIcon text="☾" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon text="☾" color={color} focused={focused} />,
         }}
       />
 
@@ -118,7 +149,7 @@ function MainTabs() {
         component={MorningDashboardScreen}
         options={{
           tabBarLabel: 'Morning',
-          tabBarIcon: ({ color }) => <TabIcon text="☀" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon text="☀" color={color} focused={focused} />,
         }}
       />
 
@@ -127,7 +158,7 @@ function MainTabs() {
         component={ReportDashboardScreen}
         options={{
           tabBarLabel: 'Report',
-          tabBarIcon: ({ color }) => <TabIcon text="▥" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon text="▥" color={color} focused={focused} />,
         }}
       />
 
@@ -136,7 +167,7 @@ function MainTabs() {
         component={SettingsDashboardScreen}
         options={{
           tabBarLabel: 'Settings',
-          tabBarIcon: ({ color }) => <TabIcon text="⚙" color={color} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon text="⚙" color={color} focused={focused} />,
         }}
       />
     </Tab.Navigator>
