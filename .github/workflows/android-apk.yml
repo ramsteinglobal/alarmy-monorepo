@@ -111,11 +111,30 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Restore debug keystore from secrets
+        shell: bash
+        env:
+          CI_DEBUG_KEYSTORE_B64: ${{ secrets.CI_DEBUG_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CI_DEBUG_KEYSTORE_B64:-}" ]; then
+            echo "::error::CI_DEBUG_KEYSTORE_B64 secret is not set."
+            exit 1
+          fi
+          mkdir -p android/app
+          echo "$CI_DEBUG_KEYSTORE_B64" | base64 -d > android/app/ci-debug.keystore
+          ls -la android/app/ci-debug.keystore
+
       # IMPORTANT: this is the SAME script local devs run
       # (`npm run android:build:debug` → node scripts/build-apk.mjs).
       # No raw `./gradlew` here, so flags/arch can never drift again.
       - name: Build APK(s) with shared script
         shell: bash
+        env:
+          CI_DEBUG_KEYSTORE_PATH: ci-debug.keystore
+          CI_DEBUG_KEYSTORE_PASSWORD: ${{ secrets.CI_DEBUG_KEYSTORE_PASSWORD }}
+          CI_DEBUG_KEY_ALIAS: ${{ secrets.CI_DEBUG_KEY_ALIAS }}
+          CI_DEBUG_KEY_PASSWORD: ${{ secrets.CI_DEBUG_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           MODE="${APK_REQUESTED_MODE:-debug}"
