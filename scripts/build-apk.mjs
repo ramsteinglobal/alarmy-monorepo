@@ -220,6 +220,63 @@ function checkDependenciesFresh() {
   }
 }
 
+
+/**
+ * Generate the JS bundle and embed it into the APK's assets so the
+ * resulting build runs standalone — without a Metro dev server.
+ *
+ * Without this step, the debug APK is a shell that requires Metro running
+ * on the dev machine; CI artifacts would then show a red screen on launch.
+ * Embedding the bundle makes both local and CI debug APKs self-contained.
+ */
+function generateJsBundle() {
+  const assetsDir = path.join(ANDROID_DIR, 'app', 'src', 'main', 'assets');
+  const bundlePath = path.join(assetsDir, 'index.android.bundle');
+  const resDir = path.join(ANDROID_DIR, 'app', 'src', 'main', 'res');
+
+  // Ensure assets dir exists
+  fs.mkdirSync(assetsDir, { recursive: true });
+
+  console.log('[build-apk] Generating JS bundle (embedded into APK, no Metro needed)...');
+
+  const npxCmd = IS_WINDOWS ? 'npx.cmd' : 'npx';
+  const result = spawnSync(
+    npxCmd,
+    [
+      'react-native',
+      'bundle',
+      '--platform',
+      'android',
+      '--dev',
+      'false',
+      '--entry-file',
+      'index.js',
+      '--bundle-output',
+      bundlePath,
+      '--assets-dest',
+      resDir,
+    ],
+    {
+      cwd: REPO_ROOT,
+      stdio: 'inherit',
+      shell: IS_WINDOWS,
+    }
+  );
+
+  if (result.status !== 0) {
+    console.error('[build-apk] JS bundle generation failed.');
+    process.exit(1);
+  }
+
+  if (!existsSync(bundlePath)) {
+    console.error('[build-apk] Bundle file not found after generation:', bundlePath);
+    process.exit(1);
+  }
+
+  const sizeKB = (statSync(bundlePath).size / 1024).toFixed(1);
+  console.log(`[build-apk] Bundle ready: ${bundlePath} (${sizeKB} KB)`);
+}
+
 function printNextSteps(mode, apkRelPath) {
   console.log('');
   if (mode === 'debug') {
@@ -291,6 +348,12 @@ function main() {
     console.log('[build-apk] --dry-run: not executing Gradle.');
     console.log(`[build-apk] expected output: ${expectedApk(opts.mode)}`);
     process.exit(0);
+  }
+
+  // Embed the JS bundle before Gradle so the APK is self-contained.
+  // This makes both local and CI debug APKs run without Metro.
+  if (!opts.cleanOnly) {
+    generateJsBundle();
   }
 
   const result = spawnSync(gradleBin, buildArgs, {
