@@ -216,9 +216,10 @@ const MorningDashboardScreen = () => {
           <Text style={styles.sectionTitle}>Morning Score</Text>
 
           <View style={styles.scoreCard}>
-            <View style={styles.scoreCircle}>
-              <Text style={styles.scoreNumber}>{streak}</Text>
-
+            <View style={styles.scoreBadgeWrap}>
+              <View style={styles.scoreCircle}>
+                <Text style={styles.scoreNumber}>{streak}</Text>
+              </View>
               <Text style={styles.scoreOutOf}>day streak</Text>
             </View>
 
@@ -541,16 +542,20 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
 
+    scoreBadgeWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
     scoreCircle: {
-      width: 78,
-      height: 78,
-      borderRadius: 39,
+      width: 90,
+      height: 90,
+      borderRadius: 45,
       borderWidth: 5,
       borderColor: colors.accent,
       backgroundColor: colors.accentSoft,
       alignItems: 'center',
       justifyContent: 'center',
-      flexDirection: 'row',
     },
 
     scoreNumber: {
@@ -560,9 +565,11 @@ const createStyles = (colors: ThemeColors) =>
     },
 
     scoreOutOf: {
-      fontSize: 12,
-      color: colors.muted,
-      marginTop: 11,
+      fontSize: 10,
+      color: colors.accent,
+      fontWeight: '700',
+      marginTop: 2,
+      letterSpacing: 0.5,
     },
 
     scoreContent: {
@@ -755,7 +762,7 @@ const createStyles = (colors: ThemeColors) =>
     },
 
     bottomSpace: {
-      height: 30,
+      height: 120,
     },
   });
 

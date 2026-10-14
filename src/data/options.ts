@@ -104,14 +104,14 @@ export const MISSIONS: Mission[] = [
   {
     id: 'squat',
     title: 'Squat Mission',
-    description: 'Complete the required squats',
+    description: 'Do real squats — accelerometer-detected',
     icon: '↕',
     difficulty: 'Hard',
   },
   {
     id: 'tap',
     title: 'Tap Challenge',
-    description: 'Tap fast to prove you are awake',
+    description: 'Tap the button repeatedly to count',
     icon: '👆',
     difficulty: 'Easy',
   },

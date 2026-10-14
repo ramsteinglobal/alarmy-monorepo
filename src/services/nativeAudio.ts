@@ -20,7 +20,7 @@ export async function playSoundPreview(
 ): Promise<void> {
   if (uri && NativeAudioPlayer?.playUri) {
     try {
-      await NativeAudioPlayer.playUri(uri);
+      await NativeAudioPlayer.playUri(uri, false);
       return;
     } catch (err) {
       console.warn('NativeAudioPlayer.playUri failed:', err);
@@ -29,7 +29,7 @@ export async function playSoundPreview(
 
   if (file && NativeAudioPlayer?.playRawSound) {
     try {
-      await NativeAudioPlayer.playRawSound(file);
+      await NativeAudioPlayer.playRawSound(file, false);
       return;
     } catch (err) {
       console.warn('NativeAudioPlayer.playRawSound failed, falling back to notifee:', err);
@@ -69,4 +69,28 @@ export async function fetchSystemRingtones(): Promise<SystemRingtone[]> {
     }
   }
   return [];
+}
+
+/**
+ * Plays an alarm sound with looping enabled via native MediaPlayer on the
+ * STREAM_ALARM stream. Volume buttons (which control STREAM_MUSIC) cannot
+ * mute this stream.
+ */
+export async function playAlarmSound(file: string): Promise<void> {
+  if (!NativeAudioPlayer?.playRawSound) {
+    console.warn('NativeAudioPlayer not available for alarm sound');
+    return;
+  }
+  await NativeAudioPlayer.playRawSound(file, true);
+}
+
+/**
+ * Same as playAlarmSound but takes a system ringtone URI.
+ */
+export async function playAlarmUri(uri: string): Promise<void> {
+  if (!NativeAudioPlayer?.playUri) {
+    console.warn('NativeAudioPlayer not available for alarm URI');
+    return;
+  }
+  await NativeAudioPlayer.playUri(uri, true);
 }

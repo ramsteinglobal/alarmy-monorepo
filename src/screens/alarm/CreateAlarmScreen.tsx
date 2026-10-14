@@ -129,9 +129,9 @@ export default function CreateAlarmScreen({ navigation, route }: AlarmScreenProp
           </View>
           <View style={styles.batchRow}>
             {[
-              { label: 'Weekdays', ids: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
-              { label: 'Weekend', ids: ['Sat', 'Sun'] },
-              { label: 'Every day', ids: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+              { label: 'Weekdays', ids: ['M', 'T1', 'W', 'T2', 'F'] },
+              { label: 'Weekend', ids: ['S1', 'S2'] },
+              { label: 'Every day', ids: ['S1', 'M', 'T1', 'W', 'T2', 'F', 'S2'] },
               { label: 'No repeat', ids: [] as string[] },
             ].map(batch => (
               <TouchableOpacity

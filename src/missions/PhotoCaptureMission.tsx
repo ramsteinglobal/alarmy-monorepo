@@ -15,6 +15,30 @@ type Props = MissionProps & {
  * Proof-by-capture mission: photograph the registered object/code to stop
  * the alarm. The photo itself is the proof you got out of bed.
  */
+type ValidationResult = { ok: true } | { ok: false; reason: string };
+
+/**
+ * Basic validation: reject tiny images (blank), reject huge files (screenshot
+ * of another photo), reject files under 15KB (corrupt/empty). Real reference
+ * comparison is planned for a future sprint.
+ */
+function validatePhoto(asset: Asset): ValidationResult {
+  const { width = 0, height = 0, fileSize = 0 } = asset;
+
+  if (width < 480 || height < 480) {
+    return { ok: false, reason: 'Photo is too small. Move closer and try again.' };
+  }
+  if (fileSize > 0 && fileSize < 15000) {
+    return { ok: false, reason: 'Photo looks empty. Try again in better light.' };
+  }
+  // Reject images with identical aspect ratio from screenshots
+  const ratio = width / height;
+  if (ratio > 3 || ratio < 0.33) {
+    return { ok: false, reason: 'That looks like a screenshot. Use the real camera.' };
+  }
+  return { ok: true };
+}
+
 export default function PhotoCaptureMission({ kind, onComplete }: Props) {
   const colors = useThemeColors();
   const missionStyles = createMissionStyles(colors);
@@ -58,8 +82,16 @@ export default function PhotoCaptureMission({ kind, onComplete }: Props) {
         return;
       }
       const asset = result.assets?.[0];
-      if (asset?.uri) setPhoto(asset);
-      else setError('No photo captured. Please try again.');
+      if (!asset?.uri) {
+        setError('No photo captured. Please try again.');
+        return;
+      }
+      const validation = validatePhoto(asset);
+      if (!validation.ok) {
+        setError(validation.reason);
+        return;
+      }
+      setPhoto(asset);
     } catch {
       setError('Camera failed. Please try again.');
     } finally {

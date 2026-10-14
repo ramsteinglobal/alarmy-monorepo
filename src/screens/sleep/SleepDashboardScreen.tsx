@@ -220,12 +220,21 @@ const SleepDashboardScreen = () => {
                 onIncrement={bedM.inc}
                 onDecrement={bedM.dec}
               />
-              <TouchableOpacity
-                style={styles.periodButton}
-                onPress={() => setBedPeriod(p => (p === 'AM' ? 'PM' : 'AM'))}
-              >
-                <Text style={styles.periodText}>{bedPeriod}</Text>
-              </TouchableOpacity>
+              <View style={styles.periodColumn} accessibilityRole="radiogroup">
+                {(['AM', 'PM'] as const).map(p => (
+                  <TouchableOpacity
+                    key={p}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: bedPeriod === p }}
+                    onPress={() => setBedPeriod(p)}
+                    style={[styles.periodButton, bedPeriod === p && styles.periodSelected]}
+                  >
+                    <Text style={[styles.periodText, bedPeriod === p && styles.periodSelectedText]}>
+                      {p}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
             <Text style={[styles.timeLabel, styles.logGap]}>WAKE TIME</Text>
@@ -243,12 +252,23 @@ const SleepDashboardScreen = () => {
                 onIncrement={wakeM.inc}
                 onDecrement={wakeM.dec}
               />
-              <TouchableOpacity
-                style={styles.periodButton}
-                onPress={() => setWakePeriod(p => (p === 'AM' ? 'PM' : 'AM'))}
-              >
-                <Text style={styles.periodText}>{wakePeriod}</Text>
-              </TouchableOpacity>
+              <View style={styles.periodColumn} accessibilityRole="radiogroup">
+                {(['AM', 'PM'] as const).map(p => (
+                  <TouchableOpacity
+                    key={p}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: wakePeriod === p }}
+                    onPress={() => setWakePeriod(p)}
+                    style={[styles.periodButton, wakePeriod === p && styles.periodSelected]}
+                  >
+                    <Text
+                      style={[styles.periodText, wakePeriod === p && styles.periodSelectedText]}
+                    >
+                      {p}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
             <View style={styles.logAction}>
@@ -693,6 +713,16 @@ const createStyles = (colors: ThemeColors) =>
       borderColor: colors.softBorder,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    periodColumn: {
+      marginLeft: 8,
+      justifyContent: 'center',
+    },
+    periodSelected: {
+      backgroundColor: colors.accent,
+    },
+    periodSelectedText: {
+      color: '#FFFFFF',
     },
     periodText: { fontSize: 14, fontWeight: '700', color: colors.accent },
     logGap: { marginTop: 14 },

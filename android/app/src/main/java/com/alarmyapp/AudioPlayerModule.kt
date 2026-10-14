@@ -19,7 +19,7 @@ class AudioPlayerModule(private val reactContext: ReactApplicationContext) :
     override fun getName(): String = "NativeAudioPlayer"
 
     @ReactMethod
-    fun playRawSound(soundName: String, promise: Promise) {
+    fun playRawSound(soundName: String, loop: Boolean, promise: Promise) {
         try {
             stopSoundInternal()
             val cleanName = soundName.replace(".wav", "").replace(".mp3", "")
@@ -43,10 +43,11 @@ class AudioPlayerModule(private val reactContext: ReactApplicationContext) :
                 val afd = reactContext.resources.openRawResourceFd(resId)
                 setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
                 afd.close()
+                isLooping = loop
                 prepare()
                 start()
-                setOnCompletionListener {
-                    stopSoundInternal()
+                if (!loop) {
+                    setOnCompletionListener { stopSoundInternal() }
                 }
             }
             promise.resolve(true)
@@ -56,7 +57,7 @@ class AudioPlayerModule(private val reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
-    fun playUri(uriString: String, promise: Promise) {
+    fun playUri(uriString: String, loop: Boolean, promise: Promise) {
         try {
             stopSoundInternal()
             val uri = Uri.parse(uriString)
@@ -68,10 +69,11 @@ class AudioPlayerModule(private val reactContext: ReactApplicationContext) :
                         .build()
                 )
                 setDataSource(reactContext, uri)
+                isLooping = loop
                 prepare()
                 start()
-                setOnCompletionListener {
-                    stopSoundInternal()
+                if (!loop) {
+                    setOnCompletionListener { stopSoundInternal() }
                 }
             }
             promise.resolve(true)

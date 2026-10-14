@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useAuth } from '../../store/AuthContext';
 
 import AlarmListItem from '../../components/AlarmListItem';
 import Card from '../../components/Card';
@@ -53,6 +54,7 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
   const [now, setNow] = useState(() => new Date());
   const colors = useThemeColors();
   const styles = createStyles(colors);
+  const { user } = useAuth();
 
   const loadAlarms = useCallback(async () => {
     try {
@@ -141,7 +143,10 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
 
   const upcoming = [...alarms]
     .filter(a => a.enabled)
-    .map(a => ({ alarm: a, at: buildTriggers(a, now)[0]?.at ?? null }))
+    .map(a => ({
+      alarm: a,
+      at: buildTriggers(a, now).sort((x, y) => x.at.getTime() - y.at.getTime())[0]?.at ?? null,
+    }))
     .filter((x): x is { alarm: StoredAlarm; at: Date } => x.at !== null)
     .sort((x, y) => x.at.getTime() - y.at.getTime());
   const next = upcoming[0] ?? null;
@@ -182,6 +187,16 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
             <Text style={styles.menuText}>↻</Text>
           </TouchableOpacity>
         </View>
+
+        {!user ? (
+          <Card style={styles.guestCard}>
+            <Text style={styles.guestTitle}>Sign in to unlock more</Text>
+            <Text style={styles.guestText}>
+              Alarms work without an account. Sign in to track sleep, build morning routines, and
+              see your reports.
+            </Text>
+          </Card>
+        ) : null}
 
         <Card style={styles.greeting}>
           <View style={styles.greetingRow}>
@@ -407,6 +422,13 @@ const createStyles = (colors: ThemeColors) =>
     },
     warnButtonText: { fontSize: FONT.body, fontWeight: '700', color: colors.onAccent },
     bottomSpace: { height: 90 },
+    guestCard: {
+      marginTop: SPACING.md,
+      backgroundColor: colors.surface,
+      borderColor: colors.divider,
+    },
+    guestTitle: { fontSize: FONT.bodyLg, fontWeight: '700', color: colors.text },
+    guestText: { marginTop: 4, fontSize: FONT.body, color: colors.muted },
     fab: {
       position: 'absolute',
       right: 20,

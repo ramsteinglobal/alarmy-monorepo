@@ -11,7 +11,15 @@ const SENTENCES = [
   'Today I will do one thing that matters',
   'Water first, then the world',
   'I get up now and thank myself later',
+  'Small steps every morning build a strong life',
+  'My alarm is a promise I keep to myself',
+  'One deep breath, then begin',
+  'Today is mine to shape',
+  'I choose progress over comfort',
+  'Wake up, show up, never give up',
 ];
+
+const pickSentence = () => SENTENCES[Math.floor(Math.random() * SENTENCES.length)];
 
 const normalise = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
 
@@ -23,7 +31,7 @@ export default function TypingMission({
   const colors = useThemeColors();
   const missionStyles = createMissionStyles(colors);
   const total = Math.max(1, Math.min(3, Math.round(reps)));
-  const [target] = useState(() => SENTENCES[Math.floor(Math.random() * SENTENCES.length)]);
+  const [target, setTarget] = useState<string>(pickSentence);
   const [value, setValue] = useState('');
   const [error, setError] = useState(false);
   const [done, setDone] = useState(0);
@@ -39,6 +47,7 @@ export default function TypingMission({
       }
       setValue('');
       setError(false);
+      setTarget(pickSentence());
       return;
     }
     setError(true);

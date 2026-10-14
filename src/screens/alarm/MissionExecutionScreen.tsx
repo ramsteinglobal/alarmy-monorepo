@@ -18,6 +18,7 @@ import MathMission from '../../missions/MathMission';
 import MemoryMission from '../../missions/MemoryMission';
 import PhotoCaptureMission from '../../missions/PhotoCaptureMission';
 import ShakeMission from '../../missions/ShakeMission';
+import SquatMission from '../../missions/SquatMission';
 import TypingMission from '../../missions/TypingMission';
 import { getMissionChain, getMissionConfig, type MissionRef } from '../../storage/alarmStorage';
 import { cancelBackup } from '../../services/alarmScheduler';
@@ -136,11 +137,7 @@ export default function MissionExecutionScreen({
         );
       case 'squat':
         return (
-          <CounterMission
-            icon="●"
-            title="Complete Squats"
-            description={`Complete ${config.squatTarget} squats to stop the alarm.`}
-            buttonLabel="SQUAT"
+          <SquatMission
             target={config.squatTarget}
             onComplete={completeStep}
             onProgress={handleProgress}
