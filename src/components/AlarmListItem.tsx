@@ -23,7 +23,9 @@ export default function AlarmListItem({ alarm, onToggle, onEdit, onDelete, onTes
   const colors = useThemeColors();
   const styles = createStyles(colors);
 
-  const nextTrigger = alarm.enabled ? buildTriggers(alarm)[0] : undefined;
+  const nextTrigger = alarm.enabled
+    ? buildTriggers(alarm).sort((a, b) => a.at.getTime() - b.at.getTime())[0]
+    : undefined;
   const ringsText =
     alarm.enabled && nextTrigger?.at
       ? `Rings ${formatTimeUntil(nextTrigger.at, new Date())}`

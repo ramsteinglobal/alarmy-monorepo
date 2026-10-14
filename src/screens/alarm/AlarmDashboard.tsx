@@ -143,7 +143,10 @@ export default function AlarmDashboard({ navigation }: AlarmScreenProps<'AlarmDa
 
   const upcoming = [...alarms]
     .filter(a => a.enabled)
-    .map(a => ({ alarm: a, at: buildTriggers(a, now)[0]?.at ?? null }))
+    .map(a => ({
+      alarm: a,
+      at: buildTriggers(a, now).sort((x, y) => x.at.getTime() - y.at.getTime())[0]?.at ?? null,
+    }))
     .filter((x): x is { alarm: StoredAlarm; at: Date } => x.at !== null)
     .sort((x, y) => x.at.getTime() - y.at.getTime());
   const next = upcoming[0] ?? null;
