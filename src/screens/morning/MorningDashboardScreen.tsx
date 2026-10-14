@@ -550,7 +550,6 @@ const createStyles = (colors: ThemeColors) =>
       backgroundColor: colors.accentSoft,
       alignItems: 'center',
       justifyContent: 'center',
-      flexDirection: 'row',
     },
 
     scoreNumber: {
@@ -560,9 +559,11 @@ const createStyles = (colors: ThemeColors) =>
     },
 
     scoreOutOf: {
-      fontSize: 12,
-      color: colors.muted,
-      marginTop: 11,
+      fontSize: 10,
+      color: colors.accent,
+      fontWeight: '700',
+      marginTop: 2,
+      letterSpacing: 0.5,
     },
 
     scoreContent: {
@@ -755,7 +756,7 @@ const createStyles = (colors: ThemeColors) =>
     },
 
     bottomSpace: {
-      height: 30,
+      height: 120,
     },
   });
 

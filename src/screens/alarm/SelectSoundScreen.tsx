@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 import Card from '../../components/Card';
 import OptionRow from '../../components/OptionRow';
@@ -46,6 +47,15 @@ export default function SelectSoundScreen({ navigation, route }: AlarmScreenProp
       stopSoundPreview();
     };
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        stopSoundPreview();
+        setPlayingId(null);
+      };
+    }, []),
+  );
 
   const currentBuiltin = SOUNDS.find(s => s.id === selectedId) ?? DEFAULT_SOUND;
 

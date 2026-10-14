@@ -6,6 +6,8 @@ import { FONT, RADIUS, SPACING, TOUCH_MIN, type ThemeColors } from '../theme';
 import { useThemeColors } from '../store/ThemeContext';
 import Card from './Card';
 import InfoRow from './InfoRow';
+import { buildTriggers } from '../utils/nextTrigger';
+import { formatTimeUntil } from '../utils/time';
 
 type Props = {
   alarm: StoredAlarm;
@@ -20,13 +22,20 @@ type Props = {
 export default function AlarmListItem({ alarm, onToggle, onEdit, onDelete, onTestRing }: Props) {
   const colors = useThemeColors();
   const styles = createStyles(colors);
+
+  const nextTrigger = alarm.enabled ? buildTriggers(alarm)[0] : undefined;
+  const ringsText =
+    alarm.enabled && nextTrigger?.at
+      ? `Rings ${formatTimeUntil(nextTrigger.at, new Date())}`
+      : alarm.days || 'No repeat';
+
   return (
     <Card style={styles.card}>
       <View style={styles.top}>
         <View
           style={styles.timeRow}
           accessible
-          accessibilityLabel={`${alarm.time} ${alarm.period}, ${alarm.days || 'No repeat'}`}
+          accessibilityLabel={`${alarm.time} ${alarm.period}, ${ringsText}`}
         >
           <Text style={styles.time}>{alarm.time}</Text>
           <Text style={styles.period}>{alarm.period}</Text>
@@ -42,7 +51,7 @@ export default function AlarmListItem({ alarm, onToggle, onEdit, onDelete, onTes
 
       <View style={styles.daysRow}>
         <Text style={styles.days}>
-          {[alarm.label, alarm.days || 'No repeat'].filter(Boolean).join(' · ')}
+          {[alarm.label, ringsText].filter(Boolean).join(' · ')}
         </Text>
         <View style={[styles.badge, !alarm.enabled && styles.badgeOff]}>
           <Text style={[styles.badgeText, !alarm.enabled && styles.badgeTextOff]}>
