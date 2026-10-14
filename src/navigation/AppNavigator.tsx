@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -75,6 +76,8 @@ function TabIcon({ text, color }: { text: string; color: string }) {
 
 // MAIN TABS
 function MainTabs() {
+  // Edge-to-edge: lift the tab bar above the system navigation bar (3-button or gesture).
+  const insets = useSafeAreaInsets();
   const colors = useThemeColors();
   return (
     <Tab.Navigator
@@ -84,9 +87,9 @@ function MainTabs() {
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          height: 68,
+          height: 60 + insets.bottom,
           paddingTop: 6,
-          paddingBottom: 8,
+          paddingBottom: 8 + insets.bottom,
           backgroundColor: colors.surface,
           borderTopColor: colors.divider,
         },
